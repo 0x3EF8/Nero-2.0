@@ -1,0 +1,16 @@
+{
+  "core": {
+    "system": true,
+    "autoreact": true,
+    "antileave": true,
+    "antiunsend": true,
+    "listenEvents": true,
+    "selfListen": false,
+    "autoMarkRead": false,
+    "autoMarkDelivery": false,
+    "forceLogin": true
+  },
+  "nero": {
+    "prefix": false
+  }
+}

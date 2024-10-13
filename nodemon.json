@@ -1,0 +1,5 @@
+{
+  "watch": ["index.js", "src"],
+  "ignore": ["src/lib/fca-unofficial", "node_modules", "*.log"],
+  "ext": "js"
+}
