@@ -32,15 +32,18 @@ Setting up Nero 2.0 is easy. Follow these steps:
      ```
 
 3. **Running the Bot**: 
-   - Start the bot with:
+   - To start the bot in development mode, use:
+     ```bash
+     npm run dev
+     ```
+   - To run it normally, you can use:
      ```bash
      node index.js
      ```
-   - Alternatively, you can use:
+   - Alternatively, you can also use:
      ```bash
      npm start
      ```
-
 ## Usage
 
 - To interact with Nero 2.0, add the account you used to connect to Nero-2.0 into a group chat.
