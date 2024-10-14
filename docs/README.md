@@ -1,6 +1,8 @@
 # Nero 2.0 - Your Student Assistant Messenger Bot
 
-| [Home](#Nero 2.0---your-student-assistant-messenger-bot) | [Features](#features) | [Getting Started](#getting-started) | [Usage](#usage) | [License](LICENSE) | [Changelog](CHANGELOG.md) | [API](docs/API.md) | [Contribute](CONTRIBUTING.md) |
+![Nero 2.0](Nero%202.0.png)
+
+| [Home](#Nero-20---your-student-assistant-messenger-bot) | [Features](#features) | [Getting Started](#getting-started) | [Usage](#usage) | [License](LICENSE) | [Changelog](../CHANGELOG.md) | [API](API.md) | [Contribute](CONTRIBUTING.md) |
 
 Nero 2.0 is a Facebook Messenger bot designed to assist students with various features, including AI-powered responses, file searches, music and video searches, and more. The bot is built using the fca-unofficial library and integrates with APIs to provide a wide range of capabilities.
 
@@ -29,9 +31,8 @@ Nero 2.0 is a Facebook Messenger bot designed to assist students with various fe
 - To interact with Nero 2.0, open a conversation with the bot on Facebook Messenger.
 - Use the available commands to access different features. For example:
   
-  - Ask the AI: `ai <your_question>`
-  - Show command list `cmd`
-
+  - Ask the AI: `nero <your_question>`
+  - Show command list: `cmd`
 
 ## Contributing
 
@@ -39,13 +40,14 @@ We welcome contributions to Nero 2.0! Please see our [Contribution Guidelines](C
 
 ## API Documentation
 
-For detailed information about Nero 2.0's API, please refer to our [API Documentation](docs/API.md).
+For detailed information about Nero 2.0's API, please refer to our [API Documentation](API.md).
 
 ## Changelog
 
-To see a list of recent changes and updates to Nero 2.0, check out our [Changelog](CHANGELOG.md).
+To see a list of recent changes and updates to Nero 2.0, check out our [Changelog](../CHANGELOG.md).
 
 ## Credits
 
-- The base of this project is built upon [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library by VangBanLaNhat.
-- Nero 2.0 was developed by Jay Patrick Cano and other Hexclan members.
+- **fca-unofficial Library**: The foundation of this project is built upon the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library by VangBanLaNhat.
+- **John Paul Caigas**: Acknowledged for modifying the fca-unofficial library to ensure compatibility, as the original version was not functioning correctly.
+- **Melvin Jones Gallano Repol**: Thanked for his invaluable support and contributions throughout the development of Nero 2.0.
