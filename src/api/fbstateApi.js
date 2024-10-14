@@ -54,11 +54,10 @@ module.exports = async function appstateHandler(ctx) {
     fs.writeFileSync(filePath, JSON.stringify(appStateData, null, 2));
     ctx.status = 200;
     ctx.body = { message: 'AppState saved successfully.', name: fbUID };
+    console.log(chalk.green(`New AppState saved: ${fileName}`));
   } catch (error) {
     ctx.throw(500, `Error while saving the app state: ${error.message}`);
   }
-
-  gracefullyExitProcess();
 };
 
 function isValidCookieStructure(cookie) {
@@ -94,9 +93,9 @@ function ensureDirectoryExists(directoryPath) {
   if (!fs.existsSync(directoryPath)) {
     try {
       fs.mkdirSync(directoryPath, { recursive: true });
-      console.log(`Directory created: ${directoryPath}`);
+      console.log(chalk.cyan(`Directory created: ${directoryPath}`));
     } catch (err) {
-      console.error(`Error creating directory: ${directoryPath}`, err);
+      console.error(chalk.red(`Error creating directory: ${directoryPath}`), err);
     }
   } else {
     checkForCredentials(directoryPath);
@@ -114,12 +113,6 @@ function checkForCredentials(directoryPath) {
       )
     );
   } else {
-    console.log(chalk.cyan('[COOKIES] Credentials Check: Not found.'));
+    console.log(chalk.yellow('[COOKIES] Credentials Check: Not found.'));
   }
-}
-
-function gracefullyExitProcess() {
-  setTimeout(() => {
-    process.exit(0);
-  }, 1000);
 }
