@@ -24,8 +24,8 @@ const chalk = require('chalk');
 const { authenticateUsers, displayUserInformation } = require('./src/auth/core');
 const { loadModules } = require('./src/utils/loader');
 const { displayAsciiInfo } = require('./src/utils/ascii_info');
-const nero = require('./src/commands/nero.js');
-require('./server.js');
+const nero = require('./src/commands/nero');
+require('./server');
 process.noDeprecation = true;
 
 const appstateFolderPath = path.join(__dirname, 'src', 'data', 'secrets');
