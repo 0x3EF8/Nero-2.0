@@ -4,7 +4,7 @@
 
 | [Home](#nero-20---your-intelligent-companion-for-any-inquiry) | [Features](#features) | [Getting Started](#getting-started) | [Usage](#usage) | [License](LICENSE) | [Changelog](../CHANGELOG.md) | [API](API.md) | [Contribute](CONTRIBUTING.md) |
 
-**Nero 2.0** is a Facebook Messenger bot that provides answers to a variety of questions. It is built on a modified version of the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library. The original library had issues with logging in, but **John Paul Caigas** fixed these problems to ensure Nero 2.0 works smoothly and reliably.
+**Nero** 2.0 is a Facebook Messenger bot that helps answer a variety of questions using AI APIs for information. At its core, it operates on the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library, jegxftydhghdhu bla bla bla I’m just too lazy to put in the detailed information here. If you want to know more, you’ll just have to dig into the documentation yourself. 
 
 ## Features
 
@@ -44,6 +44,7 @@ Setting up Nero 2.0 is easy. Follow these steps:
      ```bash
      npm start
      ```
+
 ## Usage
 
 - To interact with Nero 2.0, add the account you used to connect to Nero-2.0 into a group chat.
@@ -66,7 +67,11 @@ See recent updates in the [Changelog](../CHANGELOG.md).
 ## Credits
 
 - **fca-unofficial Library**: Built on the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library.
-- **John Paul Caigas**: Thanked for fixing login issues in the original library.
-- **Melvin Jones Gallano Repol**: Grateful for his support during development.
+- I won’t list all the APIs I used because I’m too lazy, but they have been helpful!
+
+## Special Thanks
+
+- **John Paul Caigas**: Modified the fca-unofficial library to fix the login problem.
+- **Melvin Jones Gallano Repol**: Provided invaluable help and support during Nero's development by suggesting ideas and explaining code that I didn't understand.
 
 Thank you for using Nero 2.0! We hope it serves you well.
