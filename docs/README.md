@@ -1,53 +1,69 @@
-# Nero 2.0 - Your Student Assistant Messenger Bot
+# Nero 2.0 - Your Intelligent Companion for Any Inquiry!
 
 ![Nero 2.0](Nero%202.0.png)
 
-| [Home](#Nero-20---your-student-assistant-messenger-bot) | [Features](#features) | [Getting Started](#getting-started) | [Usage](#usage) | [License](LICENSE) | [Changelog](../CHANGELOG.md) | [API](API.md) | [Contribute](CONTRIBUTING.md) |
+| [Home](#nero-20---your-intelligent-companion-for-any-inquiry) | [Features](#features) | [Getting Started](#getting-started) | [Usage](#usage) | [License](LICENSE) | [Changelog](../CHANGELOG.md) | [API](API.md) | [Contribute](CONTRIBUTING.md) |
 
-Nero 2.0 is a Facebook Messenger bot designed to assist students with various features, including AI-powered responses, file searches, music and video searches, and more. The bot is built using the fca-unofficial library and integrates with APIs to provide a wide range of capabilities.
+**Nero 2.0** is a Facebook Messenger bot that provides answers to a variety of questions. It is built on a modified version of the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library. The original library had issues with logging in, but **John Paul Caigas** fixed these problems to ensure Nero 2.0 works smoothly and reliably.
 
 ## Features
 
-1. **AI-Powered Responses**: Nero 2.0 leverages AI technologies, including the OpenAI API, to provide intelligent responses to user queries, helping students with questions related to various subjects.
-
-2. **File Search and Sharing**: Easily search and send files like PDFs, DOCX, and other office files to your chat directly through Nero 2.0.
-
-3. **Music and Video Search**: Search for music, lyrics, and videos to keep yourself entertained while studying or taking a break.
-
-4. **Command List**: To explore all available commands, simply send a message "cmd" to Nero 2.0. It will respond with a list of commands you can use.
+1. **Command List**: Send "cmd" to Nero 2.0 to see all available commands.
 
 ## Getting Started
 
-1. **Installation**: Clone this repository and follow the setup instructions to configure and deploy your own instance of Nero 2.0.
+Setting up Nero 2.0 is easy. Follow these steps:
 
-2. **Dependencies**: Make sure you have the required dependencies installed, including Node.js.
+1. **Installation**: 
+   - Clone the repository:
+     ```bash
+     git clone https://github.com/0x3EF8/Nero-2.0.git
+     ```
+   - Navigate into the project directory:
+     ```bash
+     cd Nero-2.0
+     ```
 
-3. **API Keys**: Obtain necessary API keys, such as the OpenAI API key, and configure them in the appropriate files.
+2. **Install Dependencies**: 
+   - Make sure you have Node.js installed. Download it from [nodejs.org](https://nodejs.org/).
+   - Install the required packages using npm:
+     ```bash
+     npm install
+     ```
 
-4. **Running the Bot**: Run the bot using the command `node index.js` or `npm start`.
+3. **Running the Bot**: 
+   - Start the bot with:
+     ```bash
+     node index.js
+     ```
+   - Alternatively, you can use:
+     ```bash
+     npm start
+     ```
 
 ## Usage
 
-- To interact with Nero 2.0, open a conversation with the bot on Facebook Messenger.
-- Use the available commands to access different features. For example:
-  
-  - Ask the AI: `nero <your_question>`
-  - Show command list: `cmd`
+- To interact with Nero 2.0, add the account you used to connect to Nero-2.0 into a group chat.
+- Use commands like:
+  - Ask a question: `nero <your_question>`
+  - Get command list: `cmd`
 
 ## Contributing
 
-We welcome contributions to Nero 2.0! Please see our [Contribution Guidelines](CONTRIBUTING.md) for more information on how to get started.
+We welcome contributions! Check our [Contribution Guidelines](CONTRIBUTING.md) to get started.
 
 ## API Documentation
 
-For detailed information about Nero 2.0's API, please refer to our [API Documentation](API.md).
+For details about the API, refer to our [API Documentation](API.md).
 
 ## Changelog
 
-To see a list of recent changes and updates to Nero 2.0, check out our [Changelog](../CHANGELOG.md).
+See recent updates in the [Changelog](../CHANGELOG.md).
 
 ## Credits
 
-- **fca-unofficial Library**: The foundation of this project is built upon the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library by VangBanLaNhat.
-- **John Paul Caigas**: Acknowledged for modifying the fca-unofficial library to ensure compatibility, as the original version was not functioning correctly.
-- **Melvin Jones Gallano Repol**: Thanked for his invaluable support and contributions throughout the development of Nero 2.0.
+- **fca-unofficial Library**: Built on the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library.
+- **John Paul Caigas**: Thanked for fixing login issues in the original library.
+- **Melvin Jones Gallano Repol**: Grateful for his support during development.
+
+Thank you for using Nero 2.0! We hope it serves you well.
