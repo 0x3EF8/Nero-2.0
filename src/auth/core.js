@@ -29,11 +29,16 @@ async function authenticateUsers(appstateFolderPath, loginOptions) {
 }
 
 async function loginUser(appstateFolderPath, appState, loginOptions) {
-  const appStateData = JSON.parse(
-    await fs.readFile(path.join(appstateFolderPath, appState), 'utf8')
-  );
+  const appStatePath = path.join(appstateFolderPath, appState);
+  let appStateData;
+  try {
+    appStateData = JSON.parse(await fs.readFile(appStatePath, 'utf8'));
+  } catch (error) {
+    console.error(chalk.red(`Error reading appState file ${appState}:`, error));
+    return null;
+  }
 
-  let retries = 3;
+  let retries = 10;
   while (retries > 0) {
     try {
       const api = await loginWithRetry(appStateData, loginOptions);
@@ -45,7 +50,7 @@ async function loginUser(appstateFolderPath, appState, loginOptions) {
       }
       
       const userName = userInfo[userId].name;
-      console.log(chalk.green(`✅ Login successful for user: ${userName}`));
+      // console.log(chalk.green(`✅ Login successful for user: ${userName}`));
       return { api, userName, appState };
     } catch (error) {
       console.error(chalk.yellow(`⚠️ Login attempt failed for ${appState}. Retries left: ${retries - 1}`));
@@ -53,6 +58,12 @@ async function loginUser(appstateFolderPath, appState, loginOptions) {
       retries--;
       if (retries === 0) {
         console.error(chalk.red(`❌ All login attempts failed for ${appState}`));
+        try {
+          await fs.unlink(appStatePath);
+          console.log(chalk.yellow(`🗑️ Deleted invalid .env file: ${appState}`));
+        } catch (unlinkError) {
+          console.error(chalk.red(`Error deleting .env file ${appState}:`, unlinkError));
+        }
         return null;
       } else {
         await new Promise(r => setTimeout(r, 5000));
