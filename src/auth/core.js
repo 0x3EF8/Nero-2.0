@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
+const fsWatch = require('fs');
 const path = require('path');
-const login = require('../engine/hexa-core');
+const login = require('../engine/nero-core');
 const chalk = require('chalk');
 
 async function authenticateUsers(appstateFolderPath, loginOptions) {
@@ -8,42 +9,56 @@ async function authenticateUsers(appstateFolderPath, loginOptions) {
   const appStates = files.filter((file) => path.extname(file) === '.env');
 
   const loginPromises = appStates.map(async (appState) => {
-    const appStateData = JSON.parse(
-      await fs.readFile(path.join(appstateFolderPath, appState), 'utf8')
-    );
-
-    return new Promise(async (resolve) => {
-      let retries = 3;
-      while (retries > 0) {
-        try {
-          const api = await loginWithRetry(appStateData, loginOptions);
-          const userInfo = await getUserInfo(api);
-          const userId = api.getCurrentUserID();
-          
-          if (!userInfo || !userInfo[userId] || !userInfo[userId].name) {
-            throw new Error('Unable to retrieve user name from API response');
-          }
-          
-          const userName = userInfo[userId].name;
-          console.log(chalk.green(`✅ Login successful for user: ${userName}`));
-          resolve({ api, userName, appState });
-          return;
-        } catch (error) {
-          console.error(chalk.yellow(`⚠️ Login attempt failed for ${appState}. Retries left: ${retries - 1}`));
-          console.error(chalk.red(error.message));
-          retries--;
-          if (retries === 0) {
-            console.error(chalk.red(`❌ All login attempts failed for ${appState}`));
-            resolve(null);
-          } else {
-            await new Promise(r => setTimeout(r, 5000));
-          }
-        }
-      }
-    });
+    return loginUser(appstateFolderPath, appState, loginOptions);
   });
 
-  return Promise.all(loginPromises);
+  const authenticatedUsers = await Promise.all(loginPromises);
+
+  fsWatch.watch(appstateFolderPath, async (eventType, filename) => {
+    if (eventType === 'rename' && path.extname(filename) === '.env') {
+      console.log(chalk.yellow(`New .env file detected: ${filename}`));
+      const newUser = await loginUser(appstateFolderPath, filename, loginOptions);
+      if (newUser) {
+        authenticatedUsers.push(newUser);
+        // console.log(chalk.green(`✅ New user authenticated: ${newUser.userName}`));
+      }
+    }
+  });
+
+  return authenticatedUsers.filter(user => user !== null);
+}
+
+async function loginUser(appstateFolderPath, appState, loginOptions) {
+  const appStateData = JSON.parse(
+    await fs.readFile(path.join(appstateFolderPath, appState), 'utf8')
+  );
+
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      const api = await loginWithRetry(appStateData, loginOptions);
+      const userInfo = await getUserInfo(api);
+      const userId = api.getCurrentUserID();
+      
+      if (!userInfo || !userInfo[userId] || !userInfo[userId].name) {
+        throw new Error('Unable to retrieve user name from API response');
+      }
+      
+      const userName = userInfo[userId].name;
+      console.log(chalk.green(`✅ Login successful for user: ${userName}`));
+      return { api, userName, appState };
+    } catch (error) {
+      console.error(chalk.yellow(`⚠️ Login attempt failed for ${appState}. Retries left: ${retries - 1}`));
+      console.error(chalk.red(error.message));
+      retries--;
+      if (retries === 0) {
+        console.error(chalk.red(`❌ All login attempts failed for ${appState}`));
+        return null;
+      } else {
+        await new Promise(r => setTimeout(r, 5000));
+      }
+    }
+  }
 }
 
 function loginWithRetry(appState, loginOptions) {
