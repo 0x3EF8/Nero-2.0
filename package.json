@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon --config nodemon.json",
-    "format": "prettier --write \"**/*.{js,json}\" --ignore-path .gitignore"
+    "dev": "npx prettier --write \"**/*.{js,json}\" --ignore-path .gitignore && npx nodemon --config nodemon.json",
+    "format": "npx prettier --write \"**/*.{js,json}\" --ignore-path .gitignore"
   },
   "keywords": [
     "AI",
