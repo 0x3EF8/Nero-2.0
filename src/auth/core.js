@@ -16,7 +16,7 @@ async function authenticateUsers(appstateFolderPath, loginOptions) {
 
   fsWatch.watch(appstateFolderPath, async (eventType, filename) => {
     if (eventType === 'rename' && path.extname(filename) === '.env') {
-      console.log(chalk.yellow(`New .env file detected: ${filename}`));
+     // console.log(chalk.yellow(`New .env file detected: ${filename}`));
       const newUser = await loginUser(appstateFolderPath, filename, loginOptions);
       if (newUser) {
         authenticatedUsers.push(newUser);
