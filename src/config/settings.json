@@ -1,9 +1,5 @@
 {
   "core": {
-    "system": true,
-    "autoreact": true,
-    "antileave": true,
-    "antiunsend": true,
     "listenEvents": true,
     "selfListen": false,
     "autoMarkRead": false,
@@ -11,6 +7,10 @@
     "forceLogin": true
   },
   "nero": {
+    "devMode": false,
+    "autoReact": false,
+    "antiLeave": true,
+    "antiUnsend": false,
     "prefix": false
   }
 }
