@@ -58,6 +58,25 @@ function watchJsonFiles(filePath, callback) {
   });
 }
 
+function formatMuteDuration(duration) {
+  const hours = Math.floor(duration / (60 * 60 * 1000));
+  const minutes = Math.floor((duration % (60 * 60 * 1000)) / (60 * 1000));
+  const seconds = Math.floor((duration % (60 * 1000)) / 1000);
+
+  const parts = [];
+  if (hours > 0) {
+    parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+  }
+  if (seconds > 0 || parts.length === 0) {
+    parts.push(`${seconds} second${seconds > 1 ? 's' : ''}`);
+  }
+
+  return parts.join(', ');
+}
+
 (async () => {
   try {
     clearTerminal();
@@ -179,10 +198,12 @@ function watchJsonFiles(filePath, callback) {
                       }
                       if (ret && ret[userId] && ret[userId].name) {
                         const userName = ret[userId].name;
+                        const remainingTime = MUTE_DURATION - (Date.now() - timestamp);
+                        const formattedDuration = formatMuteDuration(remainingTime);
                         api.sendMessage(
-                          `Hello ${userName}, you are currently muted. Please patiently wait for approximately ${
-                            (MUTE_DURATION - (Date.now() - timestamp)) / 1000
-                          } seconds to regain access.`,
+                          `Hello ${userName}, you are currently muted. Please patiently wait for ${formattedDuration} to regain access.
+                          
+                          Please note that this message is a one-time notification and will not be sent again to avoid any inconvenience.`,
                           event.threadID,
                           event.messageID
                         );
@@ -212,7 +233,12 @@ function watchJsonFiles(filePath, callback) {
                 const prefix = settings.nero.prefix;
                 let input = event.body.toLowerCase().trim();
 
-                if (input.startsWith(prefix) || prefix === false) {
+                const matchingCommand = Object.keys(commandFiles).find((commandName) => {
+                  const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
+                  return commandPattern.test(input);
+                });
+
+                if (matchingCommand) {
                   if (!devModeNotifiedUsers.has(event.senderID)) {
                     api.getUserInfo(event.senderID, (err, userInfo) => {
                       if (err) {
@@ -221,16 +247,20 @@ function watchJsonFiles(filePath, callback) {
                       }
                       const userName = userInfo[event.senderID].name;
                       api.sendMessage(
-    `Hello ${userName},\n\nNero is in maintenance mode for system enhancements. Only admins can run commands right now. Thanks for your understanding as we work on upgrades!\n\nHallOfCodes Team`,
-    event.threadID,
-    event.messageID
+                        `Hello ${userName},
+
+Nero is in maintenance mode for system enhancements. Only admins can run commands right now. Thanks for your understanding as we work on upgrades!
+
+HallOfCodes Team`,
+                        event.threadID,
+                        event.messageID
                       );
                       devModeNotifiedUsers.add(event.senderID);
                     });
                   }
+                  return; 
                 }
               }
-              return; 
             }
 
             if (!settings.nero.devMode || isAdmin) {
@@ -281,10 +311,9 @@ function watchJsonFiles(filePath, callback) {
                         timestamp: now,
                         commandCount: recentCommands.length,
                       });
+                      const formattedDuration = formatMuteDuration(MUTE_DURATION);
                       api.sendMessage(
-                        `Ohh no, you're going too fast. You have been muted for ${
-                          MUTE_DURATION / 1000
-                        } seconds for excessive command usage.`,
+                        `Ohh no, you're going too fast. You have been muted for ${formattedDuration} for excessive command usage.`,
                         event.threadID,
                         event.messageID
                       );
@@ -362,6 +391,6 @@ function watchJsonFiles(filePath, callback) {
   });
 
   displayUserInformation(userInformation);
-})().catch(error => {
-  handleError('Unhandled error in main application:', error);
-});
+})().catch(error => 
+  handleError('Unhandled error in main application:', error)
+);
