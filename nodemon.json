@@ -1,5 +1,5 @@
 {
-  "watch": ["index.js", "src", "src/data/*.rs"],
+  "watch": ["index.js", "src", "src/data/temp/*.rs"],
   "ignore": ["src/lib/fca-unofficial", "node_modules", "*.log"],
   "ext": "js,rs"
 }
