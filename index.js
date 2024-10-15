@@ -33,6 +33,7 @@ const appstateFolderPath = path.join(__dirname, 'src', 'data', 'secrets');
 const mutedUsersReminded = new Set();
 const mutedUsers = new Map();
 const userCommandHistory = new Map();
+const devModeNotifiedUsers = new Set();
 const MUTE_DURATION = 10 * 60 * 1000;
 const COMMAND_LIMIT = 4;
 const TIME_LIMIT = 5 * 60 * 1000;
@@ -196,30 +197,59 @@ function watchJsonFiles(filePath, callback) {
               }
             }
 
-            for (const eventHandler of Object.values(eventHandlers)) {
-              if (!userMuteInfo) {
-                try {
-                  await eventHandler(api, event);
-                } catch (error) {
-                  handleError(`Error executing event handler for event type ${event.type}:`, error);
+            const configFilePath = path.join(__dirname, 'src', 'config', 'roles.json');
+            const config = JSON.parse(await fs.readFile(configFilePath, 'utf8'));
+
+            function isAuthorizedUser(userId, config) {
+              const adminList = config.admins || [];
+              return adminList.includes(userId);
+            }
+
+            const isAdmin = isAuthorizedUser(event.senderID, config);
+
+            if (settings.nero.devMode && !isAdmin) {
+              if (event.type === 'message' || event.type === 'message_reply') {
+                const prefix = settings.nero.prefix;
+                let input = event.body.toLowerCase().trim();
+
+                if (input.startsWith(prefix) || prefix === false) {
+                  if (!devModeNotifiedUsers.has(event.senderID)) {
+                    api.getUserInfo(event.senderID, (err, userInfo) => {
+                      if (err) {
+                        console.error('Error getting user info:', err);
+                        return;
+                      }
+                      const userName = userInfo[event.senderID].name;
+                      api.sendMessage(
+    `Hello ${userName},\n\nNero is in maintenance mode for system enhancements. Only admins can run commands right now. Thanks for your understanding as we work on upgrades!\n\nHallOfCodes Team`,
+    event.threadID,
+    event.messageID
+                      );
+                      devModeNotifiedUsers.add(event.senderID);
+                    });
+                  }
+                }
+              }
+              return; 
+            }
+
+            if (!settings.nero.devMode || isAdmin) {
+              for (const eventHandler of Object.values(eventHandlers)) {
+                if (!userMuteInfo) {
+                  try {
+                    await eventHandler(api, event);
+                  } catch (error) {
+                    handleError(`Error executing event handler for event type ${event.type}:`, error);
+                  }
                 }
               }
             }
 
             if (event.type === 'message' || event.type === 'message_reply') {
               try {
-                const configFilePath = path.join(__dirname, 'src', 'config', 'roles.json');
-                const config = JSON.parse(await fs.readFile(configFilePath, 'utf8'));
                 const prefix = settings.nero.prefix;
 
-                function isAuthorizedUser(userId, config) {
-                  const vipList = config.vips || [];
-                  const adminList = config.admins || [];
-                  return vipList.includes(userId) || adminList.includes(userId);
-                }
-
                 let input = event.body.toLowerCase().trim();
-               //  console.log(`Received message: ${input}`);
 
                 if (!input.startsWith(prefix) && prefix !== false) {
                   return;
@@ -229,15 +259,12 @@ function watchJsonFiles(filePath, callback) {
                   input = input.substring(prefix.length).trim();
                 }
 
-               // console.log(`Processing command: ${input}`);
-
                 const matchingCommand = Object.keys(commandFiles).find((commandName) => {
                   const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
                   return commandPattern.test(input);
                 });
 
                 if (matchingCommand) {
-                 // console.log(`Matched command: ${matchingCommand}`);
                   const userId = event.senderID;
                   const commandHistory = userCommandHistory.get(userId) || [];
                   const now = Date.now();
@@ -247,9 +274,8 @@ function watchJsonFiles(filePath, callback) {
 
                   recentCommands.push(now);
                   userCommandHistory.set(userId, recentCommands);
-                  const isNotAuthorized = !isAuthorizedUser(userId, config);
 
-                  if (recentCommands.length > COMMAND_LIMIT && isNotAuthorized) {
+                  if (recentCommands.length > COMMAND_LIMIT && !isAdmin) {
                     if (!mutedUsers.has(userId)) {
                       mutedUsers.set(userId, {
                         timestamp: now,
@@ -268,7 +294,6 @@ function watchJsonFiles(filePath, callback) {
                     api.sendTypingIndicator(event.threadID);
                     const cmd = commandFiles[matchingCommand];
                     if (cmd) {
-                    //  console.log(`Executing command: ${matchingCommand}`);
                       if (typeof cmd === 'function') {
                         try {
                           await cmd(event, api);
@@ -282,10 +307,9 @@ function watchJsonFiles(filePath, callback) {
                     }
                   }
                 } else {
-                //  console.log(`No matching command found for: ${input}`);
                   const isPrivateThread = event.threadID == event.senderID;
                   const isGroupChat = !isPrivateThread;
-                  const containsQuestion = /(\b(what|how|did|where|who)\b|@el cano|@nexus|@nero)/i.test(input);
+                  const containsQuestion = /(\b(ai|what|how|did|where|who)\b|@el cano|@nexus|@nero)/i.test(input);
 
                   if (!mutedUsers.has(event.senderID)) {
                     if (isPrivateThread) {
@@ -295,7 +319,6 @@ function watchJsonFiles(filePath, callback) {
                       } catch (error) {
                         handleError('Error executing Nero in private thread:', error);
                       }
-                    //  console.log(`Executing Nero in private thread`);
                     } else if (isGroupChat && containsQuestion) {
                       api.sendTypingIndicator(event.threadID);
                       try {
@@ -303,7 +326,6 @@ function watchJsonFiles(filePath, callback) {
                       } catch (error) {
                         handleError('Error executing Nero in group chat:', error);
                       }
-                    //  console.log(`Executing Nero in group chat with question`);
                     }
                   }
                 }
