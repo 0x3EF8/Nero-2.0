@@ -1,370 +1,172 @@
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const https = require('https');
 
 const configPath = path.join(__dirname, '..', 'config', 'settings.json');
-const config = require(configPath);
+let config;
 
 let messagesData = {};
 
-function clearMessagesData() {
-  messagesData = {};
-  fs.writeFileSync(
-    path.join(__dirname, '..', 'data', 'messages.json'),
-    JSON.stringify(messagesData, null, 2)
-  );
+const tempDir = path.join(__dirname, '..', 'data', 'temp');
+const messagesJsonPath = path.join(tempDir, 'messages.json');
+
+async function loadConfig() {
+  try {
+    const configData = await fsPromises.readFile(configPath, 'utf8');
+    config = JSON.parse(configData);
+  } catch (error) {
+    console.error('Error loading config:', error);
+    config = { nero: { antiUnsend: false } };
+  }
 }
 
-clearMessagesData();
-setInterval(clearMessagesData, 30 * 60 * 1000);
+async function loadMessagesData() {
+  try {
+    await fsPromises.mkdir(tempDir, { recursive: true });
+    const data = await fsPromises.readFile(messagesJsonPath, 'utf8');
+    messagesData = JSON.parse(data);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.error('Error loading messages data:', error);
+    }
+    messagesData = {};
+  }
+}
+
+async function saveMessagesData() {
+  try {
+    await fsPromises.mkdir(tempDir, { recursive: true });
+    await fsPromises.writeFile(messagesJsonPath, JSON.stringify(messagesData, null, 2));
+  } catch (error) {
+    console.error('Error saving messages data:', error);
+  }
+}
 
 async function handleUnsend(api, event) {
-  async function sendToAdmins(message) {
-    for (const adminsUid of config.admins) {
-      try {
-        await api.sendMessage(message, adminsUid);
-      } catch (err) {
-        console.error(
-          'Failed to send message to admin ' + adminsUid + ': ' + err
-        );
-      }
+  await loadConfig();
+  await loadMessagesData();
+
+  async function downloadAttachment(attachment, index) {
+    if (attachment.type === 'share') {
+      return null;
     }
+
+    const attachmentType = attachment.type;
+    const attachmentUrl = attachment.url;
+    const fileExtension = attachmentType === 'photo' ? 'jpg' : 
+                          attachmentType === 'animated_image' ? 'gif' : 
+                          attachmentType === 'video' ? 'mp4' : 
+                          attachmentType === 'audio' ? 'mp3' : 'file';
+    const fileName = path.join(tempDir, `attachment_${Date.now()}_${index}.${fileExtension}`);
+    
+    return new Promise((resolve, reject) => {
+      https.get(attachmentUrl, (response) => {
+        const fileStream = fs.createWriteStream(fileName);
+        response.pipe(fileStream);
+        fileStream.on('finish', () => {
+          fileStream.close();
+          console.log(`${attachmentType} downloaded successfully`);
+          resolve(fileName);
+        });
+        fileStream.on('error', (err) => {
+          console.error(`Error writing ${attachmentType} to file:`, err);
+          reject(err);
+        });
+      }).on('error', (err) => {
+        console.error(`Error downloading ${attachmentType}:`, err);
+        reject(err);
+      });
+    });
   }
 
-  async function text_reply() {
+  async function handleMessageUnsend() {
+    if (!messagesData[event.messageID]) {
+      console.log('Message not found in cache');
+      return;
+    }
+
     try {
       const userInfo = await api.getUserInfo(event.senderID);
+      const userName = userInfo[event.senderID].name;
 
-      const message = {
-        body:
-          'User: @' +
-          userInfo[event.senderID].name +
-          ' \n\nAttempted to delete this Message.\n\n' +
-          messagesData[event.messageID].body,
-        mentions: [
-          {
-            tag: '@' + userInfo[event.senderID].name,
-            id: event.senderID,
-            fromIndex: 0,
-          },
-        ],
+      let message = {
+        body: `User: @${userName} unsent a message\n\n`,
+        mentions: [{ tag: `@${userName}`, id: event.senderID, fromIndex: 6 }],
+        attachment: []
       };
 
-      api.sendMessage(message, event.threadID);
+      const unsentMessage = messagesData[event.messageID];
+      const attachments = unsentMessage.attachments || [];
 
-      sendToAdmins(message);
+      if (unsentMessage.body) {
+        message.body += `${unsentMessage.body}\n`;
+      }
+
+      if (attachments.length > 0) {
+        const attachmentTypes = attachments.map(att => att.type);
+        const uniqueTypes = [...new Set(attachmentTypes)];
+
+        let attachmentMessage = '\n';
+        if (uniqueTypes.length === 1) {
+          const type = uniqueTypes[0];
+          if (type === 'photo') {
+            attachmentMessage += attachmentTypes.length > 1 ? 'Photos' : 'A photo';
+          } else if (type === 'video') {
+            attachmentMessage += attachmentTypes.length > 1 ? 'Videos' : 'A video';
+          } else if (type === 'audio') {
+            attachmentMessage += attachmentTypes.length > 1 ? 'Audio files' : 'An audio file';
+          } else if (type === 'file') {
+            attachmentMessage += attachmentTypes.length > 1 ? 'Files' : 'A file';
+          }
+        } else {
+          attachmentMessage += 'Multiple attachments';
+        }
+        
+        message.body += attachmentMessage;
+
+        for (let i = 0; i < attachments.length; i++) {
+          try {
+            const fileName = await downloadAttachment(attachments[i], i);
+            if (fileName) {
+              message.attachment.push(fs.createReadStream(fileName));
+            }
+          } catch (err) {
+            console.error(`Error processing attachment ${i + 1}:`, err);
+          }
+        }
+      }
+
+      if (config.nero.antiUnsend) {
+        try {
+          await api.sendMessage(message, event.threadID);
+          console.log('Unsend alert sent to the original thread');
+        } catch (err) {
+          console.error('Error sending message to thread:', err);
+        }
+      }
+
+      for (const attachment of message.attachment) {
+        try {
+          await fsPromises.unlink(attachment.path);
+        } catch (err) {
+          console.error('Error deleting temporary file:', err);
+        }
+      }
     } catch (err) {
-      api.sendMessage('Text_reply error: ' + err, event.threadID);
+      console.error('Error handling unsend event:', err);
     }
-  }
-
-  async function photo_reply() {
-    try {
-      const imagesList = [];
-      const imagesUrl = messagesData[event.messageID].attachments.map(
-        (imagesLinks) => imagesLinks.url
-      );
-
-      for (let i = 0; i < imagesUrl.length; i++) {
-        const fileName = path.join(
-          __dirname,
-          '../data/',
-          'image_' + i + '.jpg'
-        );
-        await new Promise((resolve, reject) => {
-          https.get(imagesUrl[i], (response) => {
-            const fileStream = fs.createWriteStream(fileName);
-            response.pipe(fileStream);
-            response.on('end', () => {
-              console.log('Image Download Successfully...');
-              imagesList.push(fs.createReadStream(fileName));
-              resolve();
-            });
-            response.on('error', (err) => {
-              reject(err);
-            });
-          });
-        });
-      }
-      const userInfo = await api.getUserInfo(event.senderID);
-      const message = {
-        body:
-          'User: @' +
-          userInfo[event.senderID].name +
-          ' \n\nAttempted to delete this Photo(s).',
-        attachment: imagesList,
-        mentions: [
-          {
-            tag: '@' + userInfo[event.senderID].name,
-            id: event.senderID,
-            fromIndex: 0,
-          },
-        ],
-      };
-      api.sendMessage(message, event.threadID, (err) => {
-        if (err) {
-          api.sendMessage(
-            'Failed to send Photo message: ' + err,
-            event.threadID
-          );
-        }
-      });
-
-      sendToAdmins(message);
-    } catch (err) {
-      api.sendMessage(
-        '[Function]: Failed to send Photo Message : ' + err,
-        event.threadID
-      );
-    }
-  }
-
-  async function animated_image_reply() {
-    try {
-      const gifList = [];
-      const gifUrl = messagesData[event.messageID].attachments.map(
-        (gifLinks) => gifLinks.url
-      );
-      for (let i = 0; i < gifUrl.length; i++) {
-        const fileName = path.join(
-          __dirname,
-          '../data/',
-          'image_' + i + '.gif'
-        );
-        await new Promise((resolve, reject) => {
-          https.get(gifUrl[i], (response) => {
-            const fileStream = fs.createWriteStream(fileName);
-            response.pipe(fileStream);
-            response.on('end', () => {
-              console.log('Animated image Download Successfully...');
-              gifList.push(fs.createReadStream(fileName));
-              resolve();
-            });
-            response.on('error', (err) => {
-              reject(err);
-            });
-          });
-        });
-      }
-      const userInfo = await api.getUserInfo(event.senderID);
-      const message = {
-        body:
-          'User: @' +
-          userInfo[event.senderID].name +
-          ' \n\nAttempted to delete this Gif.',
-        attachment: gifList,
-        mentions: [
-          {
-            tag: '@' + userInfo[event.senderID].name,
-            id: event.senderID,
-            fromIndex: 0,
-          },
-        ],
-      };
-      api.sendMessage(message, event.threadID, (err) => {
-        if (err) {
-          api.sendMessage('Failed to send Gif message: ' + err, event.threadID);
-        }
-      });
-
-      sendToAdmins(message);
-    } catch (err) {
-      api.sendMessage(
-        '[Function]: Failed to send Gift message: ' + err,
-        event.threadID
-      );
-    }
-  }
-
-  async function video_reply() {
-    try {
-      const videoUrl = messagesData[event.messageID].attachments.map(
-        (videoLinks) => videoLinks.url
-      );
-      const videoFileName = path.join(__dirname, '../data/', 'video.mp4');
-      let videoList = null;
-      await new Promise((resolve, reject) => {
-        const fileStream = fs.createWriteStream(videoFileName);
-        const request = https.get(videoUrl[0], (response) => {
-          response.pipe(fileStream);
-          fileStream.on('finish', () => {
-            console.log('Video downloaded successfully');
-            videoList = fs.createReadStream(videoFileName);
-            resolve();
-          });
-        });
-        request.on('error', (error) => {
-          console.error(
-            'Error downloading video ' + videoUrl[0] + ': ' + error.message
-          );
-          reject(error);
-        });
-
-        fileStream.on('error', (error) => {
-          console.error(
-            'Error saving video to file ' + videoFileName + ': ' + error.message
-          );
-          reject(error);
-        });
-      });
-      const userInfo = await api.getUserInfo(event.senderID);
-      const message = {
-        body:
-          'User: @' +
-          userInfo[event.senderID].name +
-          '\n\nAttempted to delete this Video.',
-        attachment: videoList,
-        mentions: [
-          {
-            tag: '@' + userInfo[event.senderID].name,
-            id: event.senderID,
-            fromIndex: 0,
-          },
-        ],
-      };
-      api.sendMessage(message, event.threadID, (err) => {
-        if (err) {
-          api.sendMessage(
-            'Failed to send Video message: ' + err,
-            event.threadID
-          );
-        }
-      });
-
-      sendToAdmins(message);
-    } catch (error) {
-      api.sendMessage(
-        '[Function]: Failed to send Video message: ' + error,
-        event.threadID
-      );
-    }
-  }
-
-  async function audio_reply() {
-    try {
-      const audioList = [];
-      const audioUrl = messagesData[event.messageID].attachments.map(
-        (audioLinks) => audioLinks.url
-      );
-      for (let i = 0; i < audioUrl.length; i++) {
-        const audioFileName = path.join(
-          __dirname,
-          '../data/',
-          'audio_' + i + '.mp3'
-        );
-        await new Promise((resolve, reject) => {
-          https.get(audioUrl[i], (response) => {
-            const audioFileStream = fs.createWriteStream(audioFileName);
-            response.pipe(audioFileStream);
-            response.on('end', () => {
-              console.log('Audio Download Successfully...');
-              audioList.push(fs.createReadStream(audioFileName));
-              resolve();
-            });
-            response.on('error', (err) => {
-              reject(err);
-            });
-          });
-        });
-      }
-      const userInfo = await api.getUserInfo(event.senderID);
-      const message = {
-        body:
-          'User:  @' +
-          userInfo[event.senderID].name +
-          ' \n\nAttempted to delete this  Audio.',
-        attachment: audioList,
-        mentions: [
-          {
-            tag: '@' + userInfo[event.senderID].name,
-            id: event.senderID,
-            fromIndex: 0,
-          },
-        ],
-      };
-      api.sendMessage(message, event.threadID, (err) => {
-        if (err) {
-          api.sendMessage(
-            'Failed to send Audio message: ' + err,
-            event.threadID
-          );
-        }
-      });
-
-      sendToAdmins(message);
-    } catch (error) {
-      api.sendMessage(
-        '[Function]: Failed to send Audio message: ' + error,
-        event.threadID
-      );
-    }
-  }
-
-  try {
-    if (fs.existsSync(path.join(__dirname, 'messages.json'))) {
-      const data = fs.readFileSync(
-        path.join(__dirname, '..', 'data', 'messages.json'),
-        'utf-8'
-      );
-      if (data) {
-        Object.assign(messagesData, JSON.parse(data));
-      }
-    }
-  } catch (error) {
-    api.sendMessage('Read message.json Error: ' + error, event.threadID);
   }
 
   if (event.type === 'message' || event.type === 'message_reply') {
-    // Store all messages, not just the new ones
     messagesData[event.messageID] = event;
-    fs.writeFile(
-      path.join(__dirname, '..', 'data', 'messages.json'),
-      JSON.stringify(messagesData, null, 2),
-      (err) => {
-        if (err) api.sendMessage('Save messages Error: ' + err, event.threadID);
-      }
-    );
-  }
-
-  try {
-    const settingsPath = path.join(__dirname, '..', 'config', 'roles.json');
-    const settingsData = fs.readFileSync(settingsPath, 'utf8');
-    const settings = JSON.parse(settingsData);
-
-    if (settings && settings[0] && settings[0].antiunsend === true) {
-      const except =
-        config.vips.includes(event.senderID) ||
-        config.admins.includes(event.senderID);
-
-      if (event.type === 'message_unsend' && !except) {
-        if (
-          messagesData[event.messageID] &&
-          messagesData[event.messageID].attachments.length > 0
-        ) {
-          if (messagesData[event.messageID].attachments[0].type === 'photo') {
-            photo_reply();
-          } else if (
-            messagesData[event.messageID].attachments[0].type ===
-            'animated_image'
-          ) {
-            animated_image_reply();
-          } else if (
-            messagesData[event.messageID].attachments[0].type === 'video'
-          ) {
-            video_reply();
-          } else if (
-            messagesData[event.messageID].attachments[0].type === 'audio'
-          ) {
-            audio_reply();
-          }
-        } else {
-          text_reply();
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error reading settings:', error);
+    await saveMessagesData();
+  } else if (event.type === 'message_unsend') {
+    await handleMessageUnsend();
   }
 }
+
+loadConfig();
+loadMessagesData();
 
 module.exports = handleUnsend;
