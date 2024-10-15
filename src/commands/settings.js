@@ -85,7 +85,6 @@ function updateSettingValue(settings, settingName, value) {
   let updated = false;
   let message = '';
 
-  // Check if the setting belongs to the nero section
   const neroKeys = Object.keys(settings.nero);
   if (neroKeys.map(k => k.toLowerCase()).includes(settingName.toLowerCase())) {
     const newValue = value.toLowerCase() === 'true';
@@ -97,7 +96,6 @@ function updateSettingValue(settings, settingName, value) {
       message = `⚠️ Setting ${settingName} is already set to ${value}. No change made.`;
     }
   } else {
-    // If not found in nero, check in core settings
     const coreKeys = Object.keys(settings.core);
     const newValue = value.toLowerCase() === 'true';
     const key = coreKeys.find(k => k.toLowerCase() === settingName.toLowerCase());
