@@ -24,13 +24,13 @@ function formatUptime(seconds) {
   const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = Math.floor(seconds % 60);
-  
+
   let uptimeString = '';
   if (days > 0) uptimeString += `${days}d `;
   if (hours > 0 || days > 0) uptimeString += `${hours}h `;
   if (minutes > 0 || hours > 0 || days > 0) uptimeString += `${minutes}m `;
   uptimeString += `${remainingSeconds}s`;
-  
+
   return uptimeString.trim();
 }
 
@@ -47,26 +47,23 @@ function getNeroUptime() {
 function getSystemInfo() {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
-  const usedMem = totalMem - freeMem;
-  const totalDisk = execSync('df -h --output=size | tail -1', { encoding: 'utf-8' }).trim();
-  const usedDisk = execSync('df -h --output=used | tail -1', { encoding: 'utf-8' }).trim();
+  const totalDisk = execSync('df -h --output=size / | tail -1', { encoding: 'utf-8' }).trim();
+  const freeDisk = execSync('df -h --output=avail / | tail -1', { encoding: 'utf-8' }).trim();
   const cpuInfo = os.cpus();
   const hostname = os.hostname();
   const platform = os.platform();
   const release = os.release();
-  
-  const memoryUsage = {
-    total: (totalMem / (1024 * 1024 * 1024)).toFixed(2),
-    used: (usedMem / (1024 * 1024 * 1024)).toFixed(2),
-  };
 
   return {
     hostname,
     platform,
     release,
-    memoryUsage,
+    memoryUsage: {
+      total: (totalMem / (1024 * 1024 * 1024)).toFixed(2),
+      free: (freeMem / (1024 * 1024 * 1024)).toFixed(2),
+    },
     totalDisk,
-    usedDisk,
+    freeDisk,
     cpuCores: cpuInfo.length,
   };
 }
@@ -106,18 +103,24 @@ Command Usage:
     const neroUptime = formatUptime(getNeroUptime());
 
     const message = `
-${packageInfo.name} ${packageInfo.version} System Information
+${packageInfo.name} ${packageInfo.version} System Information:
 
-Uptime Overview:
-- System Uptime: ${systemUptime}
-- Nero Uptime: ${neroUptime}
+• Node.js: ${process.version}
+• Environment: ${process.env.NODE_ENV || 'development'}
+• Hostname: ${systemInfo.hostname}
+• OS: ${systemInfo.platform} ${systemInfo.release}
+• CPU Cores: ${systemInfo.cpuCores}
+• Total Memory: ${systemInfo.memoryUsage.total} GB
+• Free Memory: ${systemInfo.memoryUsage.free} GB
+• Total Storage: ${systemInfo.totalDisk}
+• Free Storage: ${systemInfo.freeDisk}
 
-System Overview:
-- Hostname: ${systemInfo.hostname}
-- OS: ${systemInfo.platform} ${systemInfo.release}
-- RAM: ${systemInfo.memoryUsage.used} GB Used / ${systemInfo.memoryUsage.total} GB Total
-- ROM: ${systemInfo.usedDisk} Used / ${systemInfo.totalDisk} Total
-- CPU Cores: ${systemInfo.cpuCores} cores
+Runtime Details:
+• Process ID: ${process.pid}
+• Start Time: ${new Date(neroStartTime).toLocaleString()}
+• ${packageInfo.name} Uptime: ${neroUptime}
+• System Uptime: ${systemUptime}
+• Memory Usage: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB
     `;
     api.sendMessage(message.trim(), event.threadID, event.messageID);
   } else {
