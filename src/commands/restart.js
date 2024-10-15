@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 
 const packagePath = path.join(__dirname, '..', '..', 'package.json');
-const restartFilePath = path.join(__dirname, '..', '..', 'src', 'data', '@#$&.rs'); 
+const restartFilePath = path.join(__dirname, '..', '..', 'src', 'data', 'temp', '@#$&.rs'); 
 
 function getPackageInfo() {
   try {
