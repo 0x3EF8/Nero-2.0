@@ -31,10 +31,6 @@ function readSettings() {
 function formatSettings(settings) {
   const coreSettings = `│
 ├───[ Core ]───⦿
-├─⦿ System: ${settings.core.system ? '✅ True' : '❌ False'}
-├─⦿ Autoreact: ${settings.core.autoreact ? '✅ True' : '❌ False'}
-├─⦿ Antileave: ${settings.core.antileave ? '✅ True' : '❌ False'}
-├─⦿ Antiunsend: ${settings.core.antiunsend ? '✅ True' : '❌ False'}
 ├─⦿ ListenEvents: ${settings.core.listenEvents ? '✅ True' : '❌ False'}
 ├─⦿ SelfListen: ${settings.core.selfListen ? '✅ True' : '❌ False'}
 ├─⦿ AutoMarkRead: ${settings.core.autoMarkRead ? '✅ True' : '❌ False'}
@@ -44,7 +40,11 @@ function formatSettings(settings) {
 
   const neroSettings = `
 ├───[ Nero ]───⦿
-├─⦿ Prefix: ${settings.nero.prefix === false ? '❌ False' : settings.nero.prefix}
+├─⦿ DevMode: ${settings.nero.devMode ? '✅ True' : '❌ False'}
+├─⦿ AutoReact: ${settings.nero.autoReact ? '✅ True' : '❌ False'}
+├─⦿ AntiLeave: ${settings.nero.antiLeave ? '✅ True' : '❌ False'}
+├─⦿ AntiUnsend: ${settings.nero.antiUnsend ? '✅ True' : '❌ False'}
+├─⦿ Prefix: ${settings.nero.prefix ? `✅ ${settings.nero.prefix}` : '❌ False'}
 │`;
 
   return `${coreSettings}${neroSettings}`;
@@ -78,27 +78,29 @@ function updateSettings(settingName, value, senderID) {
 }
 
 function updateSettingValue(settings, settingName, value) {
-  if (!settings || !settings.nero) {
+  if (!settings) {
     return { updated: false, message: '❌ Settings data is invalid. Please check the settings file.' };
   }
 
   let updated = false;
   let message = '';
 
-  if (settingName.toLowerCase() === 'prefix') {
-    const allowedPrefixes = ['$', '/', '*', '%'];
-    if (value === 'false') {
-      settings.nero.prefix = false;
-      updated = true;
-    } else if (allowedPrefixes.includes(value)) {
-      settings.nero.prefix = value;
+  // Check if the setting belongs to the nero section
+  const neroKeys = Object.keys(settings.nero);
+  if (neroKeys.map(k => k.toLowerCase()).includes(settingName.toLowerCase())) {
+    const newValue = value.toLowerCase() === 'true';
+    const key = neroKeys.find(k => k.toLowerCase() === settingName.toLowerCase());
+    if (settings.nero[key] !== newValue) {
+      settings.nero[key] = newValue;
       updated = true;
     } else {
-      return { updated: false, message: '❌ Invalid prefix value. Use "false" to disable or one of these characters: $, *, /, %.' };
+      message = `⚠️ Setting ${settingName} is already set to ${value}. No change made.`;
     }
   } else {
-    const newValue = value === 'true';
-    const key = Object.keys(settings.core).find(k => k.toLowerCase() === settingName.toLowerCase());
+    // If not found in nero, check in core settings
+    const coreKeys = Object.keys(settings.core);
+    const newValue = value.toLowerCase() === 'true';
+    const key = coreKeys.find(k => k.toLowerCase() === settingName.toLowerCase());
     if (key) {
       if (settings.core[key] !== newValue) {
         settings.core[key] = newValue;
