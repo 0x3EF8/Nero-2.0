@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
 
 function getPackageInfo() {
   try {
@@ -17,7 +17,13 @@ function getPackageInfo() {
 }
 
 function readSettings() {
-  const settingsPath = path.join(__dirname, '..', 'config', 'settings.json');
+  const settingsPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'config',
+    'settings.json'
+  );
 
   try {
     return JSON.parse(fs.readFileSync(settingsPath));
@@ -29,9 +35,19 @@ function readSettings() {
 
 function updateSettings(settingName, value) {
   try {
-    const filePath = path.join(__dirname, '..', 'config', 'settings.json');
+    const filePath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'config',
+      'settings.json'
+    );
     const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    const { updated, message } = updateSettingValue(settings, settingName, value);
+    const { updated, message } = updateSettingValue(
+      settings,
+      settingName,
+      value
+    );
 
     if (updated) {
       fs.writeFileSync(filePath, JSON.stringify(settings, null, 2));
@@ -47,16 +63,23 @@ function updateSettings(settingName, value) {
 
 function updateSettingValue(settings, settingName, value) {
   if (!settings) {
-    return { updated: false, message: '❌ Settings data is invalid. Please check the settings file.' };
+    return {
+      updated: false,
+      message: '❌ Settings data is invalid. Please check the settings file.',
+    };
   }
 
   let updated = false;
   let message = '';
 
   const neroKeys = Object.keys(settings.nero);
-  if (neroKeys.map(k => k.toLowerCase()).includes(settingName.toLowerCase())) {
+  if (
+    neroKeys.map((k) => k.toLowerCase()).includes(settingName.toLowerCase())
+  ) {
     const newValue = value.toLowerCase() === 'true';
-    const key = neroKeys.find(k => k.toLowerCase() === settingName.toLowerCase());
+    const key = neroKeys.find(
+      (k) => k.toLowerCase() === settingName.toLowerCase()
+    );
     if (settings.nero[key] !== newValue) {
       settings.nero[key] = newValue;
       updated = true;
@@ -66,7 +89,9 @@ function updateSettingValue(settings, settingName, value) {
   } else {
     const coreKeys = Object.keys(settings.core);
     const newValue = value.toLowerCase() === 'true';
-    const key = coreKeys.find(k => k.toLowerCase() === settingName.toLowerCase());
+    const key = coreKeys.find(
+      (k) => k.toLowerCase() === settingName.toLowerCase()
+    );
     if (key) {
       if (settings.core[key] !== newValue) {
         settings.core[key] = newValue;
@@ -80,10 +105,12 @@ function updateSettingValue(settings, settingName, value) {
   return { updated, message: message || '❌ No matching setting found.' };
 }
 
-function settingsCommand(event, api) {
+function adminops(event, api) {
   const input = event.body.toLowerCase().split(' ');
 
-  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
+  const commandName = path
+    .basename(__filename, path.extname(__filename))
+    .toLowerCase();
   const packageInfo = getPackageInfo();
 
   if (input.includes('-help')) {
@@ -136,7 +163,10 @@ For further assistance, use the -help flag with any command.`;
 └────────⦿`;
       api.sendMessage(message, event.threadID, event.messageID);
     } else {
-      api.sendMessage('❌ An error occurred while retrieving the settings.', event.threadID);
+      api.sendMessage(
+        '❌ An error occurred while retrieving the settings.',
+        event.threadID
+      );
     }
   }
 }
@@ -148,4 +178,4 @@ function handleUpdateSettings(input, event, api) {
   api.sendMessage(response, event.threadID);
 }
 
-module.exports = settingsCommand;
+module.exports = adminops;
