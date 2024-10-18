@@ -1,9 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
+const commandName = path
+  .basename(__filename, path.extname(__filename))
+  .toLowerCase();
 
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
 
 function getPackageInfo() {
   try {
@@ -21,7 +23,7 @@ function getPackageInfo() {
 const packageInfo = getPackageInfo();
 
 function readConfig() {
-  const configPath = path.join(__dirname, '..', 'config', 'roles.json');
+  const configPath = path.join(__dirname, '..', '..', 'config', 'roles.json');
   try {
     return JSON.parse(fs.readFileSync(configPath));
   } catch (error) {
@@ -30,7 +32,7 @@ function readConfig() {
   }
 }
 
-function muteCommand(event, api) {
+function adminops(event, api) {
   const input = event.body.toLowerCase().split(' ');
 
   if (input.includes('-help')) {
@@ -79,7 +81,13 @@ function addMutedUser(event, api) {
     const { threadID, messageReply } = event;
     if (!messageReply) return resolve();
 
-    const exceptionListPath = path.join(__dirname, '..', 'config', 'restricted_access.json');
+    const exceptionListPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'config',
+      'restricted_access.json'
+    );
     const exceptionList = readExceptionList();
     const usersList = exceptionList.users || [];
 
@@ -114,7 +122,13 @@ function removeMutedUser(event, api) {
     const { threadID, messageReply } = event;
     if (!messageReply) return resolve();
 
-    const exceptionListPath = path.join(__dirname, '..', 'config', 'restricted_access.json');
+    const exceptionListPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'config',
+      'restricted_access.json'
+    );
     const exceptionList = readExceptionList();
     const usersList = exceptionList.users || [];
 
@@ -151,7 +165,13 @@ function removeMutedUser(event, api) {
 }
 
 function readExceptionList() {
-  const exceptionListPath = path.join(__dirname, '..', 'config', 'restricted_access.json'); 
+  const exceptionListPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'config',
+    'restricted_access.json'
+  );
   try {
     return JSON.parse(fs.readFileSync(exceptionListPath));
   } catch (error) {
@@ -160,4 +180,4 @@ function readExceptionList() {
   }
 }
 
-module.exports = muteCommand;
+module.exports = adminops;
