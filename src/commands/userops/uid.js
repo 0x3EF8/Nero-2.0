@@ -1,13 +1,14 @@
 const path = require('path');
 
-async function uid(event, api) {
+async function userops(event, api) {
   const input = event.body.toLowerCase();
 
-  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
+  const commandName = path
+    .basename(__filename, path.extname(__filename))
+    .toLowerCase();
 
-if (input.includes('-help')) {
-  const usage =
-    `Usage: ${commandName}
+  if (input.includes('-help')) {
+    const usage = `Usage: ${commandName}
 
 Description: Retrieves the Facebook UID of the mentioned user or the user who triggered the command.
 
@@ -16,9 +17,9 @@ Example with mention: ${commandName} @username
 
 Note: If no mention is provided, it will retrieve the UID of the user who triggered the command.`;
 
-  api.sendMessage(usage, event.threadID, event.messageID);
-  return;
-}
+    api.sendMessage(usage, event.threadID, event.messageID);
+    return;
+  }
 
   let targetUserID =
     event.type === 'message'
@@ -53,4 +54,4 @@ Note: If no mention is provided, it will retrieve the UID of the user who trigge
   }
 }
 
-module.exports = uid;
+module.exports = userops;
