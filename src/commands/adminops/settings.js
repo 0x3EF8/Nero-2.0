@@ -20,34 +20,11 @@ function readSettings() {
   const settingsPath = path.join(__dirname, '..', 'config', 'settings.json');
 
   try {
-    const settings = JSON.parse(fs.readFileSync(settingsPath));
-    return formatSettings(settings);
+    return JSON.parse(fs.readFileSync(settingsPath));
   } catch (error) {
     console.error('⚠️ Error reading settings:', error);
-    return '❌ An error occurred while reading the settings.';
+    return null;
   }
-}
-
-function formatSettings(settings) {
-  const coreSettings = `│
-├───[ Core ]───⦿
-├─⦿ ListenEvents: ${settings.core.listenEvents ? '✅ True' : '❌ False'}
-├─⦿ SelfListen: ${settings.core.selfListen ? '✅ True' : '❌ False'}
-├─⦿ AutoMarkRead: ${settings.core.autoMarkRead ? '✅ True' : '❌ False'}
-├─⦿ AutoMarkDelivery: ${settings.core.autoMarkDelivery ? '✅ True' : '❌ False'}
-├─⦿ ForceLogin: ${settings.core.forceLogin ? '✅ True' : '❌ False'}
-│`;
-
-  const neroSettings = `
-├───[ Nero ]───⦿
-├─⦿ DevMode: ${settings.nero.devMode ? '✅ True' : '❌ False'}
-├─⦿ AutoReact: ${settings.nero.autoReact ? '✅ True' : '❌ False'}
-├─⦿ AntiLeave: ${settings.nero.antiLeave ? '✅ True' : '❌ False'}
-├─⦿ AntiUnsend: ${settings.nero.antiUnsend ? '✅ True' : '❌ False'}
-├─⦿ Prefix: ${settings.nero.prefix ? `✅ ${settings.nero.prefix}` : '❌ False'}
-│`;
-
-  return `${coreSettings}${neroSettings}`;
 }
 
 function updateSettings(settingName, value) {
@@ -138,12 +115,28 @@ For further assistance, use the -help flag with any command.`;
     handleUpdateSettings(input, event, api);
   } else {
     const settings = readSettings();
-    if (packageInfo) {
+    if (settings && packageInfo) {
       const message = `
 ┌───[ ${packageInfo.name} ${packageInfo.version} Settings ]───⦿
-${settings}
+│
+├───[ Core ]───⦿
+├─⦿ ListenEvents: ${settings.core.listenEvents ? '✅ True' : '❌ False'}
+├─⦿ SelfListen: ${settings.core.selfListen ? '✅ True' : '❌ False'}
+├─⦿ AutoMarkRead: ${settings.core.autoMarkRead ? '✅ True' : '❌ False'}
+├─⦿ AutoMarkDelivery: ${settings.core.autoMarkDelivery ? '✅ True' : '❌ False'}
+├─⦿ ForceLogin: ${settings.core.forceLogin ? '✅ True' : '❌ False'}
+│
+├───[ Nero ]───⦿
+├─⦿ DevMode: ${settings.nero.devMode ? '✅ True' : '❌ False'}
+├─⦿ AutoReact: ${settings.nero.autoReact ? '✅ True' : '❌ False'}
+├─⦿ AntiLeave: ${settings.nero.antiLeave ? '✅ True' : '❌ False'}
+├─⦿ AntiUnsend: ${settings.nero.antiUnsend ? '✅ True' : '❌ False'}
+├─⦿ Prefix: ${settings.nero.prefix ? `✅ ${settings.nero.prefix}` : '❌ False'}
+│
 └────────⦿`;
       api.sendMessage(message, event.threadID, event.messageID);
+    } else {
+      api.sendMessage('❌ An error occurred while retrieving the settings.', event.threadID);
     }
   }
 }
