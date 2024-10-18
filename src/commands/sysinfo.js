@@ -44,20 +44,52 @@ function getNeroUptime() {
   return Math.floor(elapsedTime);
 }
 
+function getDistroInfo() {
+  try {
+    const distroInfo = fs.readFileSync('/etc/os-release', 'utf8')
+      .split('\n')
+      .reduce((acc, line) => {
+        const [key, value] = line.split('=');
+        if (key && value) {
+          acc[key] = value.replace(/"/g, ''); 
+        }
+        return acc;
+      }, {});
+    return distroInfo.PRETTY_NAME || 'Unknown Distro';
+  } catch (error) {
+    console.error('Error reading /etc/os-release:', error);
+    return 'Unknown Distro';
+  }
+}
+
 function getSystemInfo() {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
-  const totalDisk = execSync('df -h --output=size / | tail -1', { encoding: 'utf-8' }).trim();
-  const freeDisk = execSync('df -h --output=avail / | tail -1', { encoding: 'utf-8' }).trim();
+
+  let totalDisk, freeDisk;
+  try {
+    totalDisk = execSync('df -h --output=size / | tail -1', {
+      encoding: 'utf-8',
+    }).trim();
+    freeDisk = execSync('df -h --output=avail / | tail -1', {
+      encoding: 'utf-8',
+    }).trim();
+  } catch (error) {
+    totalDisk = 'N/A';
+    freeDisk = 'N/A';
+  }
+
   const cpuInfo = os.cpus();
   const hostname = os.hostname();
   const platform = os.platform();
   const release = os.release();
+  const distro = getDistroInfo();
 
   return {
     hostname,
     platform,
     release,
+    distro,
     memoryUsage: {
       total: (totalMem / (1024 * 1024 * 1024)).toFixed(2),
       free: (freeMem / (1024 * 1024 * 1024)).toFixed(2),
@@ -76,7 +108,9 @@ startNero();
 
 function sysinfoCommand(event, api) {
   const input = event.body.toLowerCase().split(' ');
-  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
+  const commandName = path
+    .basename(__filename, path.extname(__filename))
+    .toLowerCase();
   const packageInfo = getPackageInfo();
 
   if (input.includes('-help')) {
@@ -109,6 +143,7 @@ ${packageInfo.name} ${packageInfo.version} System Information:
 • Environment: ${process.env.NODE_ENV || 'development'}
 • Hostname: ${systemInfo.hostname}
 • OS: ${systemInfo.platform} ${systemInfo.release}
+• Distro: ${systemInfo.distro}
 • CPU Cores: ${systemInfo.cpuCores}
 • Total Memory: ${systemInfo.memoryUsage.total} GB
 • Free Memory: ${systemInfo.memoryUsage.free} GB
@@ -124,7 +159,11 @@ Runtime Details:
     `;
     api.sendMessage(message.trim(), event.threadID, event.messageID);
   } else {
-    api.sendMessage('Error retrieving package information.', event.threadID, event.messageID);
+    api.sendMessage(
+      'Error retrieving package information.',
+      event.threadID,
+      event.messageID
+    );
   }
 }
 
