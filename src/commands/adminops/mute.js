@@ -30,43 +30,25 @@ function readConfig() {
   }
 }
 
-function isadmins(userId) {
-  const config = readConfig();
-  if (config !== null && config.hasOwnProperty('admins')) {
-    const adminsList = config.admins || [];
-    return adminsList.includes(userId);
-  }
-  return false;
-}
-
 function muteCommand(event, api) {
   const input = event.body.toLowerCase().split(' ');
 
   if (input.includes('-help')) {
-  const usage = `
+    const usage = `
 Usage: ${commandName} [-add/-rem] [user ID]
 
 Description:
   - ${commandName} -add: Adds the specified user to the mute list.
   - ${commandName} -rem: Removes the specified user from the mute list.
+    `;
+    api.sendMessage(usage, event.threadID);
+    return Promise.resolve();
+  }
 
-Note: Only admins can use this command.
-  `;
-  api.sendMessage(usage, event.threadID);
-  return Promise.resolve();
-}
-
-  if (input.includes('-add') || input.includes('-rem')) {
-    if (!isadmins(event.senderID)) {
-      api.sendMessage('🚫 Only admins can use this command.', event.threadID);
-      return Promise.resolve();
-    }
-
-    if (input.includes('-add')) {
-      return addMutedUser(event, api);
-    } else if (input.includes('-rem')) {
-      return removeMutedUser(event, api);
-    }
+  if (input.includes('-add')) {
+    return addMutedUser(event, api);
+  } else if (input.includes('-rem')) {
+    return removeMutedUser(event, api);
   } else {
     const exceptionList = readExceptionList();
     if (exceptionList !== null && exceptionList.hasOwnProperty('users')) {
@@ -75,7 +57,7 @@ Note: Only admins can use this command.
         .join('\n');
       const totalUsers = exceptionList.users.length;
       const message = `
-┌────[ ${packageInfo?.name || 'Bot'} ${packageInfo?.version || ''} Muted Users ]────⦿
+┌────[ ${packageInfo.name} ${packageInfo.version} Muted Users ]────⦿
 │
 ${usersList}
 │
