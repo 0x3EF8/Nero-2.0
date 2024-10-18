@@ -1,63 +1,90 @@
 const fs = require('fs').promises;
-const Koa = require('koa');
-const Router = require('koa-router');
+const express = require('express');
 const ejs = require('ejs');
 const path = require('path');
 const moment = require('moment-timezone');
 const chalk = require('chalk');
 const markdownIt = require('markdown-it')();
+const statusMonitor = require('express-status-monitor');
+const appstateHandler = require('./src/api/fbstateApi');
 
-const appstateHandler = require('./src/api/fbstateApi.js');
-
-const app = new Koa();
-const router = new Router();
-
+const app = express();
 const appPort = process.env.APP_PORT || 3000;
 
-const startServer = (port) => {
-  router.get('/', async (ctx) => {
-    const html = await ejs.renderFile(
-      path.join(__dirname, 'views', 'index.ejs'),
-      {}
-    );
-    ctx.body = html;
-  });
-
-  router.get('/README.md', async (ctx) => {
-    try {
-      const readmeContent = await fs.readFile(
-        path.join(__dirname, 'docs', 'README.md'),
-        'utf8'
-      );
-      const htmlContent = markdownIt.render(readmeContent);
-      ctx.body = htmlContent;
-      ctx.type = 'text/html';
-    } catch (err) {
-      ctx.status = 404;
-      ctx.body = 'README.md not found';
+app.use(
+  statusMonitor({
+    title: 'Professional Express Status',
+    path: '/status',
+    spans: [
+      { interval: 1, retention: 60 },
+      { interval: 5, retention: 60 },
+      { interval: 15, retention: 60 }
+    ],
+    chartVisibility: {
+      cpu: true,
+      mem: true,
+      load: true,
+      eventLoop: true,
+      heap: true,
+      responseTime: true,
+      rps: true,
+      statusCodes: true
     }
+  })
+);
+
+const formatUptime = (uptimeInSeconds) => {
+  const hours = Math.floor(uptimeInSeconds / 3600);
+  const minutes = Math.floor((uptimeInSeconds % 3600) / 60);
+  const seconds = Math.floor(uptimeInSeconds % 60);
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
+app.get('/', async (req, res) => {
+  const html = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), {});
+  res.send(html);
+});
+
+app.get('/README.md', async (req, res) => {
+  try {
+    const readmeContent = await fs.readFile(path.join(__dirname, 'docs', 'README.md'), 'utf8');
+    const htmlContent = markdownIt.render(readmeContent);
+    res.type('text/html').send(htmlContent);
+  } catch (err) {
+    res.status(404).send('README.md not found');
+  }
+});
+
+app.get('/getfbstate', async (req, res) => {
+  const html = await ejs.renderFile(path.join(__dirname, 'views', 'appstateget.ejs'), {});
+  res.send(html);
+});
+
+app.get('/api/appstate', appstateHandler);
+
+app.get('/health', (req, res) => {
+  const uptime = formatUptime(process.uptime());
+  const timestamp = new Date().toLocaleString();
+
+  res.json({
+    status: 'ok',
+    uptime: uptime,
+    message: 'Server is running smoothly',
+    timestamp: timestamp,
   });
+});
 
-  router.get('/getfbstate', async (ctx) => {
-    const html = await ejs.renderFile(
-      path.join(__dirname, 'views', 'appstateget.ejs'),
-      {}
-    );
-    ctx.body = html;
-  });
+moment.tz('Asia/Manila').format('YYYY-MM-DD HH:mm:ss');
 
-  router.get('/api/appstate', appstateHandler);
-
-  moment.tz('Asia/Manila').format('YYYY-MM-DD HH:mm:ss');
-
-  app.use(router.routes()).use(router.allowedMethods());
-
+const startServer = (port) => {
   app.listen(port, () => {
     const formattedTime = moment.tz('Asia/Manila').format('MM/DD/YY hh:mm A');
-    // console.log(
-    //   chalk.cyan(`[SYSTEM] Status: ONLINE\n[NETWORK] Running on PORT: ${port}`)
-    // );
-    // console.log(chalk.green(`[TIME] Server initiated at: ${formattedTime}`));
+    console.log(
+      chalk.cyan(`[SYSTEM] Status: ONLINE\n[NETWORK] Running on PORT: ${port}`)
+    );
+    console.log(chalk.green(`[TIME] Server initiated at: ${formattedTime}`));
+    console.log(`Express status monitor available at http://localhost:${port}/status`);
+    console.log(`Health check available at http://localhost:${port}/health`);
   });
 };
 
@@ -82,5 +109,5 @@ findAvailablePort(appPort)
     startServer(availablePort);
   })
   .catch((err) => {
-    // console.error('Failed to start server:', err);
+    console.error('Failed to start server:', err);
   });
