@@ -143,9 +143,9 @@ function formatMuteDuration(duration) {
     errors = [];
   }
 
-  const commandFiles = modules.user_operations || {};
-  const adminCommandFiles = modules.admin_operations || {};
-  const eventHandlers = modules.automated_execution || {};
+  const userCmd = modules.user_operations || {};
+  const adminCmd = modules.admin_operations || {};
+  const automateCmd = modules.automated_execution || {};
   const userInformation = [];
 
   let authenticatedUsers;
@@ -235,7 +235,7 @@ function formatMuteDuration(duration) {
                 const prefix = settings.nero.prefix;
                 let input = event.body.toLowerCase().trim();
 
-                const matchingCommand = Object.keys(commandFiles).find((commandName) => {
+                const matchingCommand = Object.keys(userCmd).find((commandName) => {
                   const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
                   return commandPattern.test(input);
                 });
@@ -266,7 +266,7 @@ HallOfCodes Team`,
             }
 
             if (!settings.nero.devMode || isAdmin) {
-              for (const eventHandler of Object.values(eventHandlers)) {
+              for (const eventHandler of Object.values(automateCmd)) {
                 if (!userMuteInfo) {
                   try {
                     await eventHandler(api, event);
@@ -291,12 +291,12 @@ HallOfCodes Team`,
                   input = input.substring(prefix.length).trim();
                 }
 
-                const matchingCommand = Object.keys(commandFiles).find((commandName) => {
+                const matchingCommand = Object.keys(userCmd).find((commandName) => {
                   const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
                   return commandPattern.test(input);
                 });
 
-                const matchingAdminCommand = Object.keys(adminCommandFiles).find((commandName) => {
+                const matchingAdminCommand = Object.keys(adminCmd).find((commandName) => {
                   const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
                   return commandPattern.test(input);
                 });
@@ -330,7 +330,7 @@ HallOfCodes Team`,
                     api.sendTypingIndicator(event.threadID);
                     if (matchingAdminCommand) {
                       if (isAdmin) {
-                        const cmd = adminCommandFiles[matchingAdminCommand];
+                        const cmd = adminCmd[matchingAdminCommand];
                         if (cmd && typeof cmd === 'function') {
                           try {
                             await cmd(event, api);
@@ -345,7 +345,7 @@ HallOfCodes Team`,
                         api.sendMessage("You don't have permission to use this admin command.", event.threadID, event.messageID);
                       }
                     } else if (matchingCommand) {
-                      const cmd = commandFiles[matchingCommand];
+                      const cmd = userCmd[matchingCommand];
                       if (cmd && typeof cmd === 'function') {
                         try {
                           await cmd(event, api);
