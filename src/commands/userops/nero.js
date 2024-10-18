@@ -2,7 +2,7 @@ const axios = require('axios');
 const path = require('path');
 const fs = require('fs');
 
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
 
 function getPackageInfo() {
   try {
@@ -17,11 +17,13 @@ function getPackageInfo() {
   }
 }
 
-async function nero(event, api) {
+async function userops(event, api) {
   const input = event.body.toLowerCase().split(' ');
-  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
-  
-  const packageInfo = getPackageInfo(); 
+  const commandName = path
+    .basename(__filename, path.extname(__filename))
+    .toLowerCase();
+
+  const packageInfo = getPackageInfo();
 
   if (input.includes('-help')) {
     const usage = `
@@ -41,42 +43,57 @@ Command Usage:
     return;
   }
 
-  const prompt = input.slice(1).join(' ') || "Hello, Nero.";
+  const prompt = input.slice(1).join(' ') || 'Hello, Nero.';
 
- // console.log(`Received command: ${event.body}`);
-//  console.log(`Sending prompt to API: ${prompt}`);
+  // console.log(`Received command: ${event.body}`);
+  //  console.log(`Sending prompt to API: ${prompt}`);
 
   if (packageInfo) {
     try {
-      const response = await axios.post('https://nexra.aryahcr.cc/api/chat/gpt', {
-        messages: [
-          { 
-            role: 'assistant', 
-            content: `You are ${packageInfo.name} ${packageInfo.version}, an advanced AI with in-depth expertise in a wide range of fields. Respond professionally, providing articulate and concise answers while maintaining a humanized and formal tone.`
-          },
-          {
-            role: 'user',
-            content: prompt 
-          }
-        ],
-        model: 'GPT-4',
-        markdown: false,
-      });
+      const response = await axios.post(
+        'https://nexra.aryahcr.cc/api/chat/gpt',
+        {
+          messages: [
+            {
+              role: 'assistant',
+              content: `You are ${packageInfo.name} ${packageInfo.version}, an advanced AI with in-depth expertise in a wide range of fields. Respond professionally, providing articulate and concise answers while maintaining a humanized and formal tone.`,
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          model: 'GPT-4',
+          markdown: false,
+        }
+      );
 
       const { status, gpt } = response.data;
 
       if (status) {
         api.sendMessage(gpt, event.threadID, event.messageID);
       } else {
-        api.sendMessage('❌ Unexpected response from the AI API.', event.threadID, event.messageID);
+        api.sendMessage(
+          '❌ Unexpected response from the AI API.',
+          event.threadID,
+          event.messageID
+        );
       }
     } catch (error) {
       console.error('⚠️ Error sending request to AI API:', error);
-      api.sendMessage('❌ An error occurred while communicating with the AI API.', event.threadID, event.messageID);
+      api.sendMessage(
+        '❌ An error occurred while communicating with the AI API.',
+        event.threadID,
+        event.messageID
+      );
     }
   } else {
-    api.sendMessage('❌ Error retrieving package information.', event.threadID, event.messageID);
+    api.sendMessage(
+      '❌ Error retrieving package information.',
+      event.threadID,
+      event.messageID
+    );
   }
 }
 
-module.exports = nero;
+module.exports = userops;
