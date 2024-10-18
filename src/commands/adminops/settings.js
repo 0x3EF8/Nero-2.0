@@ -50,17 +50,8 @@ function formatSettings(settings) {
   return `${coreSettings}${neroSettings}`;
 }
 
-function updateSettings(settingName, value, senderID) {
-  const configPath = path.join(__dirname, '..', 'config', 'roles.json');
-
+function updateSettings(settingName, value) {
   try {
-    const config = JSON.parse(fs.readFileSync(configPath));
-    const adminsList = config.admins || [];
-
-    if (!adminsList.includes(senderID)) {
-      return '🚫 Access Denied. You lack the necessary permissions to utilize this command.';
-    }
-
     const filePath = path.join(__dirname, '..', 'config', 'settings.json');
     const settings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     const { updated, message } = updateSettingValue(settings, settingName, value);
@@ -137,7 +128,6 @@ Commands:
 
 Note: 
 - For prefix, use "false" to disable it or one of these characters: $, *, /, %.
-- Ensure you have the required permissions to modify settings.
 
 For further assistance, use the -help flag with any command.`;
     api.sendMessage(usage, event.threadID);
@@ -161,7 +151,7 @@ ${settings}
 function handleUpdateSettings(input, event, api) {
   const settingName = input[input.indexOf('-set') + 1];
   const value = input[input.indexOf('-set') + 2];
-  const response = updateSettings(settingName, value, event.senderID);
+  const response = updateSettings(settingName, value);
   api.sendMessage(response, event.threadID);
 }
 
