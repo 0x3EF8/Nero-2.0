@@ -382,7 +382,7 @@ HallOfCodes Team`,
                       );
                     }
                   } else {
-                    api.sendTypingIndicator(event.threadID);
+                    // api.sendTypingIndicator(event.threadID);
                     if (matchingAdminCommand) {
                       if (isAdmin) {
                         const cmd = adminCmd[matchingAdminCommand];
@@ -406,7 +406,7 @@ HallOfCodes Team`,
                         }
                       } else {
                         api.sendMessage(
-                          "You don't have permission to use this admin command.",
+                          "Command execution blocked: You are not permitted to use this command.",
                           event.threadID,
                           event.messageID
                         );
@@ -443,7 +443,7 @@ HallOfCodes Team`,
 
                   if (!mutedUsers.has(event.senderID)) {
                     if (isPrivateThread) {
-                      api.sendTypingIndicator(event.threadID);
+                      // api.sendTypingIndicator(event.threadID);
                       try {
                         await nero(event, api);
                       } catch (error) {
@@ -453,7 +453,7 @@ HallOfCodes Team`,
                         );
                       }
                     } else if (isGroupChat && containsQuestion) {
-                      api.sendTypingIndicator(event.threadID);
+                      // api.sendTypingIndicator(event.threadID);
                       try {
                         await nero(event, api);
                       } catch (error) {
