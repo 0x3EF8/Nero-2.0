@@ -124,26 +124,28 @@ function formatMuteDuration(duration) {
     forceLogin: settings.core.forceLogin,
   };
 
-  const cmdFolder = path.join(__dirname, 'src', 'commands');
-  const eventFolder = path.join(__dirname, 'src', 'events');
-
+  const userops = path.join(__dirname, 'src', 'commands', 'userops');
+  const adminops = path.join(__dirname, 'src', 'commands', 'adminops');
+  const autoexec = path.join(__dirname, 'src', 'commands', 'autoexec');
   let modules, errors;
   try {
     ({ modules, errors } = await loadModules({
-      [cmdFolder]: 'Commands',
-      [eventFolder]: 'Events'
+      [userops]: 'user_operations',
+      [adminops]: 'admin_operations',
+      [autoexec]: 'automated_execution'
     }));
     if (errors.length > 0) {
       console.log(chalk.yellow('\n⚠️ Some modules failed to load. Check the errors above for details.'));
     }
   } catch (error) {
     handleError('Error loading modules:', error);
-    modules = { Commands: {}, Events: {} };
+    modules = { user_operations: {}, admin_operations: {}, automated_execution: {} };
     errors = [];
   }
 
-  const commandFiles = modules.Commands || {};
-  const eventHandlers = modules.Events || {};
+  const commandFiles = modules.user_operations || {};
+  const adminCommandFiles = modules.admin_operations || {};
+  const eventHandlers = modules.automated_execution || {};
   const userInformation = [];
 
   let authenticatedUsers;
@@ -294,7 +296,12 @@ HallOfCodes Team`,
                   return commandPattern.test(input);
                 });
 
-                if (matchingCommand) {
+                const matchingAdminCommand = Object.keys(adminCommandFiles).find((commandName) => {
+                  const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
+                  return commandPattern.test(input);
+                });
+
+                if (matchingCommand || matchingAdminCommand) {
                   const userId = event.senderID;
                   const commandHistory = userCommandHistory.get(userId) || [];
                   const now = Date.now();
@@ -321,9 +328,25 @@ HallOfCodes Team`,
                     }
                   } else {
                     api.sendTypingIndicator(event.threadID);
-                    const cmd = commandFiles[matchingCommand];
-                    if (cmd) {
-                      if (typeof cmd === 'function') {
+                    if (matchingAdminCommand) {
+                      if (isAdmin) {
+                        const cmd = adminCommandFiles[matchingAdminCommand];
+                        if (cmd && typeof cmd === 'function') {
+                          try {
+                            await cmd(event, api);
+                          } catch (error) {
+                            handleError(`Error executing admin command ${matchingAdminCommand}:`, error);
+                            api.sendMessage(`An error occurred while executing the admin command: ${error.message}`, event.threadID);
+                          }
+                        } else {
+                          console.error(`Invalid admin command structure for ${matchingAdminCommand}`);
+                        }
+                      } else {
+                        api.sendMessage("You don't have permission to use this admin command.", event.threadID, event.messageID);
+                      }
+                    } else if (matchingCommand) {
+                      const cmd = commandFiles[matchingCommand];
+                      if (cmd && typeof cmd === 'function') {
                         try {
                           await cmd(event, api);
                         } catch (error) {
@@ -353,6 +376,7 @@ HallOfCodes Team`,
                       try {
                         await nero(event, api);
                       } catch (error) {
+                        
                         handleError('Error executing Nero in group chat:', error);
                       }
                     }
