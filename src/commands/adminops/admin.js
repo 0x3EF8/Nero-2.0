@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
 function getPackageInfo() {
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
@@ -17,7 +17,7 @@ function getPackageInfo() {
 const packageInfo = getPackageInfo();
 
 function readConfig() {
-  const configPath = path.join(__dirname, '..', 'config', 'roles.json');
+  const configPath = path.join(__dirname, '..', '..', 'config', 'roles.json');
   try {
     return JSON.parse(fs.readFileSync(configPath));
   } catch (error) {
@@ -26,7 +26,7 @@ function readConfig() {
 }
 
 function writeConfig(config) {
-  const configPath = path.join(__dirname, '..', 'config', 'roles.json');
+  const configPath = path.join(__dirname, '..', '..', 'config', 'roles.json');
   try {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
     return true;
@@ -35,8 +35,10 @@ function writeConfig(config) {
   }
 }
 
-async function adminsCommand(event, api) {
-  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
+async function adminops(event, api) {
+  const commandName = path
+    .basename(__filename, path.extname(__filename))
+    .toLowerCase();
   const input = event.body.toLowerCase().trim();
 
   if (input.includes('-help')) {
@@ -97,10 +99,16 @@ ${adminsList}
           api.sendMessage(message, event.threadID);
         }
       } catch (error) {
-        api.sendMessage('An error occurred while fetching admin names.', event.threadID);
+        api.sendMessage(
+          'An error occurred while fetching admin names.',
+          event.threadID
+        );
       }
     } else {
-      api.sendMessage('An error occurred while reading the admins user list.', event.threadID);
+      api.sendMessage(
+        'An error occurred while reading the admins user list.',
+        event.threadID
+      );
     }
   }
 }
@@ -115,7 +123,10 @@ function addadmins(event, api) {
     } else {
       const parts = body.split(' ');
       if (parts.length < 3) {
-        api.sendMessage("Please provide a user ID or reply to a user's message to add them as an admin.", threadID);
+        api.sendMessage(
+          "Please provide a user ID or reply to a user's message to add them as an admin.",
+          threadID
+        );
         return resolve();
       }
       userId = parts[2];
@@ -137,7 +148,10 @@ function addadmins(event, api) {
         adminsList.push(userId);
         config.admins = adminsList;
         if (writeConfig(config)) {
-          api.sendMessage(`${name} has been successfully added as an admin.`, threadID);
+          api.sendMessage(
+            `${name} has been successfully added as an admin.`,
+            threadID
+          );
         } else {
           api.sendMessage('Failed to update the admin list.', threadID);
         }
@@ -157,7 +171,10 @@ function remadmins(event, api) {
     } else {
       const parts = body.split(' ');
       if (parts.length < 3) {
-        api.sendMessage("Please provide a user ID or reply to a user's message to remove them from admins.", threadID);
+        api.sendMessage(
+          "Please provide a user ID or reply to a user's message to remove them from admins.",
+          threadID
+        );
         return resolve();
       }
       userId = parts[2];
@@ -204,4 +221,4 @@ function getUserInfo(api, userId) {
   });
 }
 
-module.exports = adminsCommand;
+module.exports = adminops;
