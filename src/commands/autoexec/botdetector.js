@@ -7,9 +7,9 @@ const exceptionListPath = path.join(
   'config',
   'restricted_access.json'
 );
-const configPath = path.join(__dirname, '..', 'config', 'roles.json');
+const configPath = path.join(__dirname, '..', '..', 'config', 'roles.json');
 
-async function isBot(api, event) {
+async function autoexec(api, event) {
   if (typeof event.body === 'string') {
     const userMessage = event.body.toLowerCase();
 
@@ -90,7 +90,7 @@ This user has been added to the restricted list to prevent spam and maintain a s
           api.sendMessage(confirmationMessage, event.threadID);
         }
       } catch (err) {
-        console.error('Error while processing isBot event:', err);
+        console.error('Error while processing autoexec event:', err);
       }
     }
   }
@@ -103,4 +103,4 @@ function isAdminOrVIP(userID) {
   return config.admins.includes(userID) || config.vips.includes(userID);
 }
 
-module.exports = isBot;
+module.exports = autoexec;
