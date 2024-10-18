@@ -1,8 +1,17 @@
 const path = require('path');
 const fs = require('fs');
 
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
-const restartFilePath = path.join(__dirname, '..', '..', 'src', 'data', 'temp', '@#$&.rs'); 
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
+const restartFilePath = path.join(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  'src',
+  'data',
+  'temp',
+  '@#$&.rs'
+);
 
 function getPackageInfo() {
   try {
@@ -16,9 +25,11 @@ function getPackageInfo() {
   }
 }
 
-function restartCommand(event, api) {
+function adminops(event, api) {
   const input = event.body.toLowerCase().split(' ');
-  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
+  const commandName = path
+    .basename(__filename, path.extname(__filename))
+    .toLowerCase();
   const packageInfo = getPackageInfo();
 
   if (input.includes('-help')) {
@@ -43,7 +54,11 @@ Command Usage:
     const restartTime = new Date().toISOString();
     const logMessage = `${packageInfo.name} ${packageInfo.version} was restarted at: ${restartTime}\n`;
 
-    api.sendMessage(`🔄 Restarting ${packageInfo.name} ${packageInfo.version} in 3 seconds... Please wait.`, event.threadID, event.messageID);
+    api.sendMessage(
+      `🔄 Restarting ${packageInfo.name} ${packageInfo.version} in 3 seconds... Please wait.`,
+      event.threadID,
+      event.messageID
+    );
 
     setTimeout(() => {
       fs.writeFile(restartFilePath, logMessage, (err) => {
@@ -55,4 +70,4 @@ Command Usage:
   }
 }
 
-module.exports = restartCommand;
+module.exports = adminops;
