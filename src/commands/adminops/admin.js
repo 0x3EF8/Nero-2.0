@@ -35,15 +35,6 @@ function writeConfig(config) {
   }
 }
 
-function isadmins(userId) {
-  const config = readConfig();
-  if (config !== null && config.hasOwnProperty('admins')) {
-    const adminsList = config.admins || [];
-    return adminsList.includes(userId);
-  }
-  return false;
-}
-
 async function adminsCommand(event, api) {
   const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
   const input = event.body.toLowerCase().trim();
@@ -57,18 +48,12 @@ Description:
   - ${commandName} -add: When replying to a message, adds the message sender to the admins list.
   - ${commandName} -rem [user ID]: Removes the specified user from the admins list.
   - ${commandName} -rem: When replying to a message, removes the message sender from the admins list.
-
-Note: Only admins can use this command.`;
+`;
     api.sendMessage(usage, event.threadID);
     return;
   }
 
   const command = input.split(' ')[1];
-
-  if (!isadmins(event.senderID)) {
-    api.sendMessage('Only admins can use this command.', event.threadID);
-    return;
-  }
 
   if (input.includes('-add') || input.includes('-rem')) {
     if (input.includes('-add')) {
