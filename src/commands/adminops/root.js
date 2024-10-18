@@ -1,8 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
+
 function getPackageInfo() {
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
@@ -15,10 +19,32 @@ function getPackageInfo() {
   }
 }
 
+async function getUsername() {
+  try {
+    const { stdout } = await execPromise('whoami');
+    return stdout.trim();
+  } catch (error) {
+    console.error('Error getting username:', error);
+    return 'user';
+  }
+}
+
+async function getFileCreationDates(files) {
+  const creationDates = {};
+  
+  for (const file of files) {
+    const filePath = path.join(__dirname, file);
+    const stats = fs.statSync(filePath);
+    creationDates[file] = stats.birthtime.toISOString().slice(0, 10);
+  }
+
+  return creationDates;
+}
+
 async function adminops(event, api) {
   const cmdFolderPath = path.join(__dirname, '.');
-
-  fs.readdir(cmdFolderPath, (err, files) => {
+  
+  fs.readdir(cmdFolderPath, async (err, files) => {
     if (err) {
       console.error('Error reading directory:', err);
       return;
@@ -27,11 +53,12 @@ async function adminops(event, api) {
     const commandFiles = files.filter(
       (file) => path.extname(file).toLowerCase() === '.js'
     );
+
     const commandList = commandFiles.map((file) => path.parse(file).name);
+    const creationDates = await getFileCreationDates(commandFiles);
 
     const perPage = 10;
     const totalPages = Math.ceil(commandList.length / perPage);
-
     const userMessage = event.body.toLowerCase().trim();
     let page = parseInt(userMessage.split(' ')[1]) || 1;
     let showAll = false;
@@ -43,6 +70,9 @@ async function adminops(event, api) {
 
     const packageInfo = getPackageInfo();
     const commandName = path.basename(__filename, path.extname(__filename));
+    const osType = os.type();
+    const username = await getUsername();
+    const hostname = os.hostname(); 
 
     if (userMessage.includes('-help')) {
       const helpMessage =
@@ -55,23 +85,19 @@ async function adminops(event, api) {
       return;
     }
 
-    const osType = os.type();
-
     if (showAll) {
       const output = [
-        `┌─[ ${packageInfo.name}${packageInfo.version}@${osType} ]`,
-        '├───────────────────────────────────',
-        '│ ┌─[ Available Admin Commands ]',
-        '│ │',
-        ...commandList.map(
-          (cmd) => `│ ├─[ ${cmd.charAt(0).toUpperCase() + cmd.slice(1)} ]`
-        ),
-        '│ │',
-        '│ └─[ All Commands ]',
-        '└───────────────────────────────────',
-        '',
+        `${username}@${hostname}:~$ ${commandName} -all`,
+        `Package: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
+        'Available Admin Commands:',
+        '-----------------------------------',
+        ...commandList.map((cmd) => {
+          const creationDate = creationDates[`${cmd}.js`];
+          return `- ${cmd.charAt(0).toUpperCase() + cmd.slice(1)} (Created: ${creationDate})`;
+        }),
+        '-----------------------------------',
         `Total Commands: ${commandList.length}`,
-        `Displaying all available commands.`,
+        'Displaying all available commands.',
         '',
         `Instructions: To view usage for a specific command, type the command followed by "-help." For example, to access usage details for the "${commandName}" command, type "${commandName} -help."`,
       ];
@@ -86,19 +112,17 @@ async function adminops(event, api) {
       const commandsToShow = commandList.slice(startIndex, endIndex);
 
       const output = [
-        `┌─[ ${packageInfo.name} v${packageInfo.version} | OS: ${osType} ]`,
-        '├───────────────────────────────────',
-        '│ ┌─[ Available Commands ]',
-        '│ │',
-        ...commandsToShow.map(
-          (cmd) => `│ ├─[ ${cmd.charAt(0).toUpperCase() + cmd.slice(1)} ]`
-        ),
-        '│ │',
-        `│ └─[ Page ${page} of ${totalPages} ]`,
-        '└───────────────────────────────────',
-        '',
-        `Total Commands: ${commandList.length}`,
+        `${username}@${hostname}:~$ ${commandName}`,
+        `Package: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
+        'Available Commands:',
+        '-----------------------------------',
+        ...commandsToShow.map((cmd) => {
+          const creationDate = creationDates[`${cmd}.js`];
+          return `- ${cmd.charAt(0).toUpperCase() + cmd.slice(1)} (Created: ${creationDate})`;
+        }),
+        '-----------------------------------',
         `Page ${page}/${totalPages}`,
+        `Total Commands: ${commandList.length}`,
         '',
         `Instructions: To view usage for a specific command, type the command followed by "-help." For example, to access usage details for the "${commandName}" command, type "${commandName} -help."`,
       ];
