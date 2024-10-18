@@ -6,7 +6,7 @@ const util = require('util');
 const execPromise = util.promisify(exec);
 
 const COMMAND_TIMEOUT = 7000;
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
 
 function getPackageInfo() {
   try {
@@ -29,9 +29,11 @@ async function sendOutputInChunks(api, threadID, output) {
   }
 }
 
-async function shellCommand(event, api) {
+async function adminops(event, api) {
   try {
-    const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
+    const commandName = path
+      .basename(__filename, path.extname(__filename))
+      .toLowerCase();
     const input = event.body.toLowerCase();
     if (input.includes('-help')) {
       const usage = `
@@ -53,7 +55,7 @@ Examples:
     const cmd = event.body.split(' ').slice(1).join(' ');
 
     const packageInfo = getPackageInfo();
-    const osType = os.type(); 
+    const osType = os.type();
 
     let formattedOutput = '';
     if (packageInfo) {
@@ -85,7 +87,7 @@ Examples:
   } catch (err) {
     const errorMessage = `An error occurred: ${err.message}`;
     const packageInfo = getPackageInfo();
-    const osType = os.type(); 
+    const osType = os.type();
 
     let formattedOutput = '';
     if (packageInfo) {
@@ -94,10 +96,10 @@ Examples:
 ╰─$ 
 `;
     }
-    
+
     formattedOutput += errorMessage;
     await sendOutputInChunks(api, event.threadID, formattedOutput);
   }
 }
 
-module.exports = shellCommand;
+module.exports = adminops;
