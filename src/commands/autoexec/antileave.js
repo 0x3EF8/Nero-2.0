@@ -1,14 +1,20 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-async function eventAntileave(api, event) {
-  const settingsPath = path.join(__dirname, '..', 'config', 'settings.json');
+async function autoexec(api, event) {
+  const settingsPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'config',
+    'settings.json'
+  );
 
   try {
     const settingsData = await fs.readFile(settingsPath, 'utf8');
     const settings = JSON.parse(settingsData);
 
-    if (settings && settings.nero && settings.nero.antiLeave === true) {
+    if (settings && settings.nero && settings.nero.autoexec === true) {
       if (event.logMessageType === 'log:unsubscribe') {
         const userId = event.logMessageData.leftParticipantFbId;
 
@@ -29,46 +35,31 @@ async function eventAntileave(api, event) {
 
           const user = userInfo[userId];
           if (user) {
-            const userName = user.name;
-
             setTimeout(async () => {
               try {
                 await new Promise((resolve, reject) => {
-                  api.addUserToGroup(parseInt(userId), event.threadID, (err) => {
-                    if (err) reject(err);
-                    else resolve();
-                  });
+                  api.addUserToGroup(
+                    parseInt(userId),
+                    event.threadID,
+                    (err) => {
+                      if (err) reject(err);
+                      else resolve();
+                    }
+                  );
                 });
-
-                api.sendMessage(
-                  {
-                    body: `@${userName} has been successfully reinstated to the group.`,
-                    mentions: [
-                      {
-                        tag: `@${userName}`,
-                        id: userId,
-                      },
-                    ],
-                  },
-                  event.threadID
-                );
               } catch (error) {
-                console.error('Error adding user back to group:', error);
-                api.sendMessage(
-                  `Failed to reinstate ${userName} to the group. Error: ${error.message}`,
-                  event.threadID
-                );
+                // console.error('Error adding user back to group:', error);
               }
             }, 5000);
           }
         } catch (error) {
-          console.error('Error getting thread or user info:', error);
+          // console.error('Error getting thread or user info:', error);
         }
       }
     }
   } catch (error) {
-    console.error('Error reading settings:', error);
+    // console.error('Error reading settings:', error);
   }
 }
 
-module.exports = eventAntileave;
+module.exports = autoexec;
