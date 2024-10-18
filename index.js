@@ -1,19 +1,19 @@
 /**
  * BETA VERSION - TESTING PHASE
- * 
- * This is **Nero 2.0**, a Facebook bot developed by **Jay Patrick Cano** using a modified 
- * version of **fca-unofficial** with fixes from **John Paul Caigas**. This script is in 
+ *
+ * This is **Nero 2.0**, a Facebook bot developed by **Jay Patrick Cano** using a modified
+ * version of **fca-unofficial** with fixes from **John Paul Caigas**. This script is in
  * the **beta testing phase**, and users may encounter errors during use.
- * 
+ *
  * Key Points:
- * - **Potential Bugs**: This version may still have undiscovered bugs and may not behave 
+ * - **Potential Bugs**: This version may still have undiscovered bugs and may not behave
  *   as expected.
- * - **Not Production Ready**: It is not optimized for stability or performance and is 
+ * - **Not Production Ready**: It is not optimized for stability or performance and is
  *   intended for testing only.
- * - **Event Handling**: Event listeners and command handling may require further testing 
+ * - **Event Handling**: Event listeners and command handling may require further testing
  *   for complex scenarios.
- * 
- * Please report any issues or feedback as development continues. Use this script at your 
+ *
+ * Please report any issues or feedback as development continues. Use this script at your
  * own risk.
  */
 
@@ -21,10 +21,13 @@ const path = require('path');
 const fs = require('fs').promises;
 const fsWatch = require('fs');
 const chalk = require('chalk');
-const { authenticateUsers, displayUserInformation } = require('./src/auth/core');
+const {
+  authenticateUsers,
+  displayUserInformation,
+} = require('./src/auth/core');
 const { loadModules } = require('./src/utils/loader');
 const { displayAsciiInfo } = require('./src/utils/ascii_info');
-const nero = require('./src/commands/nero');
+const nero = require('./src/commands/userops/nero');
 require('./server');
 process.noDeprecation = true;
 
@@ -89,8 +92,15 @@ function formatMuteDuration(duration) {
   let exceptionList, settings;
 
   try {
-    const exceptionListFilePath = path.join(__dirname, 'src', 'config', 'restricted_access.json');
-    exceptionList = JSON.parse(await fs.readFile(exceptionListFilePath, 'utf8'));
+    const exceptionListFilePath = path.join(
+      __dirname,
+      'src',
+      'config',
+      'restricted_access.json'
+    );
+    exceptionList = JSON.parse(
+      await fs.readFile(exceptionListFilePath, 'utf8')
+    );
   } catch (error) {
     handleError('Error reading exception list:', error);
     exceptionList = { bots: [], users: [], threads: [] };
@@ -101,12 +111,19 @@ function formatMuteDuration(duration) {
   const threads = exceptionList.threads || [];
 
   try {
-    const settingsFilePath = path.join(__dirname, 'src', 'config', 'settings.json');
+    const settingsFilePath = path.join(
+      __dirname,
+      'src',
+      'config',
+      'settings.json'
+    );
     settings = JSON.parse(await fs.readFile(settingsFilePath, 'utf8'));
     watchJsonFiles(settingsFilePath, async () => {
       try {
         settings = JSON.parse(await fs.readFile(settingsFilePath, 'utf8'));
-        console.log(chalk.green(`Settings updated: ${JSON.stringify(settings)}`));
+        console.log(
+          chalk.green(`Settings updated: ${JSON.stringify(settings)}`)
+        );
       } catch (error) {
         handleError('Error reading updated settings:', error);
       }
@@ -132,14 +149,22 @@ function formatMuteDuration(duration) {
     ({ modules, errors } = await loadModules({
       [userops]: 'user_operations',
       [adminops]: 'admin_operations',
-      [autoexec]: 'automated_execution'
+      [autoexec]: 'automated_execution',
     }));
     if (errors.length > 0) {
-      console.log(chalk.yellow('\n⚠️ Some modules failed to load. Check the errors above for details.'));
+      console.log(
+        chalk.yellow(
+          '\n⚠️ Some modules failed to load. Check the errors above for details.'
+        )
+      );
     }
   } catch (error) {
     handleError('Error loading modules:', error);
-    modules = { user_operations: {}, admin_operations: {}, automated_execution: {} };
+    modules = {
+      user_operations: {},
+      admin_operations: {},
+      automated_execution: {},
+    };
     errors = [];
   }
 
@@ -150,7 +175,10 @@ function formatMuteDuration(duration) {
 
   let authenticatedUsers;
   try {
-    authenticatedUsers = await authenticateUsers(appstateFolderPath, loginOptions);
+    authenticatedUsers = await authenticateUsers(
+      appstateFolderPath,
+      loginOptions
+    );
   } catch (error) {
     handleError('Error authenticating users:', error);
     authenticatedUsers = [];
@@ -200,8 +228,10 @@ function formatMuteDuration(duration) {
                       }
                       if (ret && ret[userId] && ret[userId].name) {
                         const userName = ret[userId].name;
-                        const remainingTime = MUTE_DURATION - (Date.now() - timestamp);
-                        const formattedDuration = formatMuteDuration(remainingTime);
+                        const remainingTime =
+                          MUTE_DURATION - (Date.now() - timestamp);
+                        const formattedDuration =
+                          formatMuteDuration(remainingTime);
                         api.sendMessage(
                           `Hello ${userName}, you are currently muted. Please patiently wait for ${formattedDuration} to regain access.
                           
@@ -220,8 +250,15 @@ function formatMuteDuration(duration) {
               }
             }
 
-            const configFilePath = path.join(__dirname, 'src', 'config', 'roles.json');
-            const config = JSON.parse(await fs.readFile(configFilePath, 'utf8'));
+            const configFilePath = path.join(
+              __dirname,
+              'src',
+              'config',
+              'roles.json'
+            );
+            const config = JSON.parse(
+              await fs.readFile(configFilePath, 'utf8')
+            );
 
             function isAuthorizedUser(userId, config) {
               const adminList = config.admins || [];
@@ -235,10 +272,14 @@ function formatMuteDuration(duration) {
                 const prefix = settings.nero.prefix;
                 let input = event.body.toLowerCase().trim();
 
-                const matchingCommand = Object.keys(userCmd).find((commandName) => {
-                  const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
-                  return commandPattern.test(input);
-                });
+                const matchingCommand = Object.keys(userCmd).find(
+                  (commandName) => {
+                    const commandPattern = new RegExp(
+                      `^${commandName}(\\s+.*|$)`
+                    );
+                    return commandPattern.test(input);
+                  }
+                );
 
                 if (matchingCommand) {
                   if (!devModeNotifiedUsers.has(event.senderID)) {
@@ -260,7 +301,7 @@ HallOfCodes Team`,
                       devModeNotifiedUsers.add(event.senderID);
                     });
                   }
-                  return; 
+                  return;
                 }
               }
             }
@@ -271,7 +312,10 @@ HallOfCodes Team`,
                   try {
                     await eventHandler(api, event);
                   } catch (error) {
-                    handleError(`Error executing event handler for event type ${event.type}:`, error);
+                    handleError(
+                      `Error executing event handler for event type ${event.type}:`,
+                      error
+                    );
                   }
                 }
               }
@@ -291,15 +335,23 @@ HallOfCodes Team`,
                   input = input.substring(prefix.length).trim();
                 }
 
-                const matchingCommand = Object.keys(userCmd).find((commandName) => {
-                  const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
-                  return commandPattern.test(input);
-                });
+                const matchingCommand = Object.keys(userCmd).find(
+                  (commandName) => {
+                    const commandPattern = new RegExp(
+                      `^${commandName}(\\s+.*|$)`
+                    );
+                    return commandPattern.test(input);
+                  }
+                );
 
-                const matchingAdminCommand = Object.keys(adminCmd).find((commandName) => {
-                  const commandPattern = new RegExp(`^${commandName}(\\s+.*|$)`);
-                  return commandPattern.test(input);
-                });
+                const matchingAdminCommand = Object.keys(adminCmd).find(
+                  (commandName) => {
+                    const commandPattern = new RegExp(
+                      `^${commandName}(\\s+.*|$)`
+                    );
+                    return commandPattern.test(input);
+                  }
+                );
 
                 if (matchingCommand || matchingAdminCommand) {
                   const userId = event.senderID;
@@ -318,13 +370,16 @@ HallOfCodes Team`,
                         timestamp: now,
                         commandCount: recentCommands.length,
                       });
-                      const formattedDuration = formatMuteDuration(MUTE_DURATION);
+                      const formattedDuration =
+                        formatMuteDuration(MUTE_DURATION);
                       api.sendMessage(
                         `Ohh no, you're going too fast. You have been muted for ${formattedDuration} for excessive command usage.`,
                         event.threadID,
                         event.messageID
                       );
-                      console.log(`User ${userId} muted for excessive command usage`);
+                      console.log(
+                        `User ${userId} muted for excessive command usage`
+                      );
                     }
                   } else {
                     api.sendTypingIndicator(event.threadID);
@@ -335,14 +390,26 @@ HallOfCodes Team`,
                           try {
                             await cmd(event, api);
                           } catch (error) {
-                            handleError(`Error executing admin command ${matchingAdminCommand}:`, error);
-                            api.sendMessage(`An error occurred while executing the admin command: ${error.message}`, event.threadID);
+                            handleError(
+                              `Error executing admin command ${matchingAdminCommand}:`,
+                              error
+                            );
+                            api.sendMessage(
+                              `An error occurred while executing the admin command: ${error.message}`,
+                              event.threadID
+                            );
                           }
                         } else {
-                          console.error(`Invalid admin command structure for ${matchingAdminCommand}`);
+                          console.error(
+                            `Invalid admin command structure for ${matchingAdminCommand}`
+                          );
                         }
                       } else {
-                        api.sendMessage("You don't have permission to use this admin command.", event.threadID, event.messageID);
+                        api.sendMessage(
+                          "You don't have permission to use this admin command.",
+                          event.threadID,
+                          event.messageID
+                        );
                       }
                     } else if (matchingCommand) {
                       const cmd = userCmd[matchingCommand];
@@ -350,18 +417,29 @@ HallOfCodes Team`,
                         try {
                           await cmd(event, api);
                         } catch (error) {
-                          handleError(`Error executing command ${matchingCommand}:`, error);
-                          api.sendMessage(`An error occurred while executing the command: ${error.message}`, event.threadID);
+                          handleError(
+                            `Error executing command ${matchingCommand}:`,
+                            error
+                          );
+                          api.sendMessage(
+                            `An error occurred while executing the command: ${error.message}`,
+                            event.threadID
+                          );
                         }
                       } else {
-                        console.error(`Invalid command structure for ${matchingCommand}`);
+                        console.error(
+                          `Invalid command structure for ${matchingCommand}`
+                        );
                       }
                     }
                   }
                 } else {
                   const isPrivateThread = event.threadID == event.senderID;
                   const isGroupChat = !isPrivateThread;
-                  const containsQuestion = /(\b(ai|what|how|did|where|who)\b|@el cano|@nexus|@nero)/i.test(input);
+                  const containsQuestion =
+                    /(\b(ai|what|how|did|where|who)\b|@el cano|@nexus|@nero)/i.test(
+                      input
+                    );
 
                   if (!mutedUsers.has(event.senderID)) {
                     if (isPrivateThread) {
@@ -369,15 +447,20 @@ HallOfCodes Team`,
                       try {
                         await nero(event, api);
                       } catch (error) {
-                        handleError('Error executing Nero in private thread:', error);
+                        handleError(
+                          'Error executing Nero in private thread:',
+                          error
+                        );
                       }
                     } else if (isGroupChat && containsQuestion) {
                       api.sendTypingIndicator(event.threadID);
                       try {
                         await nero(event, api);
                       } catch (error) {
-                        
-                        handleError('Error executing Nero in group chat:', error);
+                        handleError(
+                          'Error executing Nero in group chat:',
+                          error
+                        );
                       }
                     }
                   }
@@ -394,27 +477,43 @@ HallOfCodes Team`,
     }
   }
 
-  const exceptionListFilePath = path.join(__dirname, 'src', 'config', 'restricted_access.json');
+  const exceptionListFilePath = path.join(
+    __dirname,
+    'src',
+    'config',
+    'restricted_access.json'
+  );
   watchJsonFiles(exceptionListFilePath, async () => {
     try {
-      exceptionList = JSON.parse(await fs.readFile(exceptionListFilePath, 'utf8'));
-      console.log(chalk.green(`Exception list updated: ${JSON.stringify(exceptionList)}`));
+      exceptionList = JSON.parse(
+        await fs.readFile(exceptionListFilePath, 'utf8')
+      );
+      console.log(
+        chalk.green(`Exception list updated: ${JSON.stringify(exceptionList)}`)
+      );
     } catch (error) {
       handleError('Error reading updated exception list:', error);
     }
   });
 
-  const rolesConfigFilePath = path.join(__dirname, 'src', 'config', 'roles.json');
+  const rolesConfigFilePath = path.join(
+    __dirname,
+    'src',
+    'config',
+    'roles.json'
+  );
   watchJsonFiles(rolesConfigFilePath, async () => {
     try {
       const config = JSON.parse(await fs.readFile(rolesConfigFilePath, 'utf8'));
-      console.log(chalk.green(`Roles config updated: ${JSON.stringify(config)}`));
+      console.log(
+        chalk.green(`Roles config updated: ${JSON.stringify(config)}`)
+      );
     } catch (error) {
       handleError('Error reading updated roles config:', error);
     }
   });
 
   displayUserInformation(userInformation);
-})().catch(error => 
+})().catch((error) =>
   handleError('Unhandled error in main application:', error)
 );
