@@ -137,25 +137,28 @@ Command Usage:
     const neroUptime = formatUptime(getNeroUptime());
 
     const message = `
-${packageInfo.name} ${packageInfo.version} System Information:
-
-• Node.js: ${process.version}
-• Environment: ${process.env.NODE_ENV || 'development'}
-• Hostname: ${systemInfo.hostname}
-• OS: ${systemInfo.platform} ${systemInfo.release}
-• Distro: ${systemInfo.distro}
-• CPU Cores: ${systemInfo.cpuCores}
-• Total Memory: ${systemInfo.memoryUsage.total} GB
-• Free Memory: ${systemInfo.memoryUsage.free} GB
-• Total Storage: ${systemInfo.totalDisk}
-• Free Storage: ${systemInfo.freeDisk}
-
-Runtime Details:
-• Process ID: ${process.pid}
-• Start Time: ${new Date(neroStartTime).toLocaleString()}
-• ${packageInfo.name} Uptime: ${neroUptime}
-• System Uptime: ${systemUptime}
-• Memory Usage: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB
+┌───[ ${packageInfo.name} ${packageInfo.version} System information ]───⦿
+│
+├─⦿ Node.js: ${process.version}
+├─⦿ Environment: ${process.env.NODE_ENV || 'development'}
+├─⦿ Hostname: ${systemInfo.hostname}
+├─⦿ OS: ${systemInfo.platform} ${systemInfo.release}
+├─⦿ Distro: ${systemInfo.distro}
+├─⦿ CPU Cores: ${systemInfo.cpuCores}
+├─⦿ Total Memory: ${systemInfo.memoryUsage.total} GB
+├─⦿ Free Memory: ${systemInfo.memoryUsage.free} GB
+├─⦿ Total Storage: ${systemInfo.totalDisk}
+├─⦿ Free Storage: ${systemInfo.freeDisk}
+│
+├─── Runtime Details ─────⦿
+│
+├─⦿ Process ID: ${process.pid}
+├─⦿ Start Time: ${new Date(neroStartTime).toLocaleString()}
+├─⦿ Nero Uptime: ${neroUptime}
+├─⦿ System Uptime: ${systemUptime}
+├─⦿ Memory Usage: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB
+│
+└────────⦿
     `;
     api.sendMessage(message.trim(), event.threadID, event.messageID);
   } else {
