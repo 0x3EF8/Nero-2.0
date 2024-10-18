@@ -1,19 +1,23 @@
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { exec } = require('child_process');
 const util = require('util');
 const execPromise = util.promisify(exec);
 
 const COMMAND_TIMEOUT = 7000;
+const packagePath = path.join(__dirname, '..', '..', 'package.json');
 
-function isadmins(userId) {
-  const configPath = path.join(__dirname, '..', 'config', 'roles.json');
+function getPackageInfo() {
   try {
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const adminsList = config.admins || [];
-    return adminsList.includes(userId);
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    return {
+      name: packageData.name,
+      version: packageData.version,
+    };
   } catch (error) {
-    return false;
+    console.error('Error reading package.json:', error);
+    return null;
   }
 }
 
@@ -25,25 +29,16 @@ async function sendOutputInChunks(api, threadID, output) {
   }
 }
 
-async function shell(event, api) {
+async function shellCommand(event, api) {
   try {
     const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
-
-    if (!isadmins(event.senderID)) {
-      api.sendMessage(
-        '🚫 Access Denied. You lack the necessary permissions to use this command.',
-        event.threadID
-      );
-      return;
-    }
-
     const input = event.body.toLowerCase();
     if (input.includes('-help')) {
       const usage = `
 Command: ${commandName}
 
 Usage: ${commandName} [cmd]
-Description: Allows admins to execute shell commands directly on the server.
+Description: Allows executing any shell commands directly on the server.
 
 Examples:
   ${commandName} ls -al
@@ -57,32 +52,52 @@ Examples:
 
     const cmd = event.body.split(' ').slice(1).join(' ');
 
+    const packageInfo = getPackageInfo();
+    const osType = os.type(); 
+
+    let formattedOutput = '';
+    if (packageInfo) {
+      formattedOutput += `
+╭─${packageInfo.name}${packageInfo.version}@${osType} ~
+╰─$ ${cmd}
+`;
+    }
+
     if (!cmd) {
-      api.sendMessage(
-        '⚠️ Please provide a command to execute.',
-        event.threadID,
-        event.messageID
-      );
+      formattedOutput += 'Please provide a command to execute.';
+      await sendOutputInChunks(api, event.threadID, formattedOutput);
       return;
     }
 
     try {
       const { stdout, stderr } = await execPromise(cmd, {
         timeout: COMMAND_TIMEOUT,
+        shell: true,
       });
       const fullOutput = stdout || stderr || 'No output';
-      await sendOutputInChunks(api, event.threadID, fullOutput);
+      formattedOutput += fullOutput ? fullOutput : 'No output';
+      await sendOutputInChunks(api, event.threadID, formattedOutput);
     } catch (error) {
       const errorMessage = `Command failed. Error: ${error.message}`;
-      api.sendMessage(errorMessage, event.threadID, event.messageID);
+      formattedOutput += `\n${errorMessage}`;
+      await sendOutputInChunks(api, event.threadID, formattedOutput);
     }
   } catch (err) {
-    api.sendMessage(
-      `❗ An error occurred: ${err.message}`,
-      event.threadID,
-      event.messageID
-    );
+    const errorMessage = `An error occurred: ${err.message}`;
+    const packageInfo = getPackageInfo();
+    const osType = os.type(); 
+
+    let formattedOutput = '';
+    if (packageInfo) {
+      formattedOutput += `
+╭─${packageInfo.name}${packageInfo.version}@${osType} ~
+╰─$ 
+`;
+    }
+    
+    formattedOutput += errorMessage;
+    await sendOutputInChunks(api, event.threadID, formattedOutput);
   }
 }
 
-module.exports = shell;
+module.exports = shellCommand;
