@@ -9,10 +9,10 @@ const statusMonitor = require('express-status-monitor');
 const appstateHandler = require('./src/api/fbstateApi');
 
 const app = express();
-const appPort = process.env.APP_PORT || 3000;
+const appPort = process.env.APP_PORT || 6057;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // To handle URL-encoded data
+app.use(express.json()); 
+
 app.use(
   statusMonitor({
     title: 'Professional Express Status',
@@ -20,7 +20,7 @@ app.use(
     spans: [
       { interval: 1, retention: 60 },
       { interval: 5, retention: 60 },
-      { interval: 15, retention: 60 }
+      { interval: 15, retention: 60 },
     ],
     chartVisibility: {
       cpu: true,
@@ -30,17 +30,10 @@ app.use(
       heap: true,
       responseTime: true,
       rps: true,
-      statusCodes: true
-    }
+      statusCodes: true,
+    },
   })
 );
-
-const formatUptime = (uptimeInSeconds) => {
-  const hours = Math.floor(uptimeInSeconds / 3600);
-  const minutes = Math.floor((uptimeInSeconds % 3600) / 60);
-  const seconds = Math.floor(uptimeInSeconds % 60);
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-};
 
 app.get('/', async (req, res) => {
   const html = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), {});
@@ -65,7 +58,7 @@ app.get('/getfbstate', async (req, res) => {
 app.get('/api/appstate', appstateHandler);
 
 app.get('/health', (req, res) => {
-  const uptime = formatUptime(process.uptime());
+  const uptime = moment.duration(process.uptime(), 'seconds').humanize();
   const timestamp = new Date().toLocaleString();
 
   res.json({
@@ -81,9 +74,7 @@ moment.tz('Asia/Manila').format('YYYY-MM-DD HH:mm:ss');
 const startServer = (port) => {
   app.listen(port, () => {
     const formattedTime = moment.tz('Asia/Manila').format('MM/DD/YY hh:mm A');
-    console.log(
-      chalk.cyan(`[SYSTEM] Status: ONLINE\n[NETWORK] Running on PORT: ${port}`)
-    );
+    console.log(chalk.cyan(`[SYSTEM] Status: ONLINE\n[NETWORK] Running on PORT: ${port}`));
     console.log(chalk.green(`[TIME] Server initiated at: ${formattedTime}`));
     console.log(`Express status monitor available at http://localhost:${port}/status`);
     console.log(`Health check available at http://localhost:${port}/health`);
