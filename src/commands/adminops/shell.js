@@ -29,8 +29,15 @@ async function sendOutputInChunks(api, threadID, output) {
   }
 }
 
+async function getFirstName(event, api) {
+  const senderId = event.senderID;
+  const userInfo = await api.getUserInfo(senderId);
+  return userInfo[senderId]?.firstName.toLowerCase() || 'user'; 
+}
+
 async function adminops(event, api) {
   try {
+    const firstName = await getFirstName(event, api); 
     const commandName = path
       .basename(__filename, path.extname(__filename))
       .toLowerCase();
@@ -60,7 +67,7 @@ Examples:
     let formattedOutput = '';
     if (packageInfo) {
       formattedOutput += `
-╭─${packageInfo.name}${packageInfo.version}@${osType} ~
+╭─[ ${firstName}@${packageInfo.name}${packageInfo.version} - ${osType} ] ~
 ╰─$ ${cmd}
 `;
     }
@@ -92,7 +99,7 @@ Examples:
     let formattedOutput = '';
     if (packageInfo) {
       formattedOutput += `
-╭─${packageInfo.name}${packageInfo.version}@${osType} ~
+╭─[ ${firstName}@${packageInfo.name}${packageInfo.version} - ${osType} ] ~
 ╰─$ 
 `;
     }
