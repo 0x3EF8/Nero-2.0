@@ -11,6 +11,8 @@ const appstateHandler = require('./src/api/fbstateApi');
 const app = express();
 const appPort = process.env.APP_PORT || 3000;
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // To handle URL-encoded data
 app.use(
   statusMonitor({
     title: 'Professional Express Status',
