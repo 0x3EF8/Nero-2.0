@@ -17,7 +17,7 @@ async function getPackageInfo() {
 async function getFirstName(event, api) {
   const senderId = event.senderID;
   const userInfo = await api.getUserInfo(senderId);
-  return userInfo[senderId]?.firstName.replace(/\s+/g, '') || 'User';
+  return userInfo[senderId]?.firstName.replace(/\s+/g, '').toLowerCase() || 'user';
 }
 
 async function adminops(event, api) {
@@ -71,7 +71,7 @@ async function adminops(event, api) {
 
       const output = [
         `${firstName}:~$ ${commandName}`,
-        `Others: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
+        `System: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
         'Available Commands:',
         '-----------------------------------',
         ...commandsToShow.map(cmd => `- ${cmd.charAt(0).toUpperCase() + cmd.slice(1)}`),
