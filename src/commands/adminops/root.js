@@ -19,14 +19,10 @@ function getPackageInfo() {
   }
 }
 
-async function getUsername() {
-  try {
-    const { stdout } = await execPromise('whoami');
-    return stdout.trim();
-  } catch (error) {
-    console.error('Error getting username:', error);
-    return 'user';
-  }
+async function getFirstName(event) {
+  const senderId = event.senderID;
+  const userInfo = await api.getUserInfo(senderId);
+  return userInfo[senderId].firstName;
 }
 
 async function getFileCreationDates(files) {
@@ -71,8 +67,7 @@ async function adminops(event, api) {
     const packageInfo = getPackageInfo();
     const commandName = path.basename(__filename, path.extname(__filename));
     const osType = os.type();
-    const username = await getUsername();
-    const hostname = os.hostname(); 
+    const firstName = await getFirstName(event);
 
     if (userMessage.includes('-help')) {
       const helpMessage =
@@ -87,13 +82,12 @@ async function adminops(event, api) {
 
     if (showAll) {
       const output = [
-        `${username}@${hostname}:~$ ${commandName} -all`,
-        `Package: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
+        `${firstName}:~$ ${commandName} -all`,
+        `Others: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
         'Available Admin Commands:',
         '-----------------------------------',
         ...commandList.map((cmd) => {
-          const creationDate = creationDates[`${cmd}.js`];
-          return `- ${cmd.charAt(0).toUpperCase() + cmd.slice(1)} (Created: ${creationDate})`;
+          return `- ${cmd.charAt(0).toUpperCase() + cmd.slice(1)}`;
         }),
         '-----------------------------------',
         `Total Commands: ${commandList.length}`,
@@ -112,13 +106,12 @@ async function adminops(event, api) {
       const commandsToShow = commandList.slice(startIndex, endIndex);
 
       const output = [
-        `${username}@${hostname}:~$ ${commandName}`,
-        `Package: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
+        `${firstName}:~$ ${commandName}`,
+        `Others: ${packageInfo.name} v${packageInfo.version} | OS: ${osType}`,
         'Available Commands:',
         '-----------------------------------',
         ...commandsToShow.map((cmd) => {
-          const creationDate = creationDates[`${cmd}.js`];
-          return `- ${cmd.charAt(0).toUpperCase() + cmd.slice(1)} (Created: ${creationDate})`;
+          return `- ${cmd.charAt(0).toUpperCase() + cmd.slice(1)}`;
         }),
         '-----------------------------------',
         `Page ${page}/${totalPages}`,
