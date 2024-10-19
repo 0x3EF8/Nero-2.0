@@ -14,10 +14,19 @@ const requiredCookieKeys = [
 ];
 ensureDirectoryExists(appStateDirectory);
 
-module.exports = async function appstateHandler(ctx) {
-  let { cookies } = ctx.request.query;
+module.exports = async function appstateHandler(req, res) {
+  let cookies;
+
+  if (req.query.cookies) {
+    cookies = req.query.cookies;
+  }
+  
+  if (!cookies && req.body.cookies) {
+    cookies = req.body.cookies;
+  }
+
   if (!cookies) {
-    ctx.throw(400, 'The "cookies" parameter is required.');
+    return res.status(400).json({ error: 'The "cookies" parameter is required.' });
   }
 
   let appStateData;
@@ -28,22 +37,20 @@ module.exports = async function appstateHandler(ctx) {
       !Array.isArray(appStateData) ||
       appStateData.some((cookie) => !isValidCookieStructure(cookie))
     ) {
-      ctx.throw(
-        400,
-        'Invalid "cookies". It should be an array of objects with the correct structure.'
-      );
+      return res.status(400).json({
+        error: 'Invalid "cookies". It should be an array of objects with the correct structure.'
+      });
     }
   } catch (error) {
-    ctx.throw(400, 'Invalid JSON in "cookies" parameter.');
+    return res.status(400).json({ error: 'Invalid JSON in "cookies" parameter.' });
   }
 
   const existingAppStateValues = getExistingAppStateValues();
 
   if (isDuplicateCookie(appStateData, existingAppStateValues)) {
-    ctx.throw(
-      400,
-      'Duplicate cookies detected. Please ensure each appstate is unique.'
-    );
+    return res.status(400).json({
+      error: 'Duplicate cookies detected. Please ensure each appstate is unique.'
+    });
   }
 
   const fbUID = appStateData.find((cookie) => cookie.key === 'c_user').value;
@@ -52,11 +59,10 @@ module.exports = async function appstateHandler(ctx) {
 
   try {
     fs.writeFileSync(filePath, JSON.stringify(appStateData, null, 2));
-    ctx.status = 200;
-    ctx.body = { message: 'AppState saved successfully.', name: fbUID };
+    res.status(200).json({ message: 'AppState saved successfully.', name: fbUID });
     console.log(chalk.green(`New AppState saved: ${fileName}`));
   } catch (error) {
-    ctx.throw(500, `Error while saving the app state: ${error.message}`);
+    return res.status(500).json({ error: `Error while saving the app state: ${error.message}` });
   }
 };
 
@@ -95,7 +101,10 @@ function ensureDirectoryExists(directoryPath) {
       fs.mkdirSync(directoryPath, { recursive: true });
       console.log(chalk.cyan(`Directory created: ${directoryPath}`));
     } catch (err) {
-      console.error(chalk.red(`Error creating directory: ${directoryPath}`), err);
+      console.error(
+        chalk.red(`Error creating directory: ${directoryPath}`),
+        err
+      );
     }
   } else {
     checkForCredentials(directoryPath);
