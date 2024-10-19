@@ -267,45 +267,6 @@ function formatMuteDuration(duration) {
 
             const isAdmin = isAuthorizedUser(event.senderID, config);
 
-            if (settings.nero.devMode && !isAdmin) {
-              if (event.type === 'message' || event.type === 'message_reply') {
-                const prefix = settings.nero.prefix;
-                let input = event.body.toLowerCase().trim();
-
-                const matchingCommand = Object.keys(userCmd).find(
-                  (commandName) => {
-                    const commandPattern = new RegExp(
-                      `^${commandName}(\\s+.*|$)`
-                    );
-                    return commandPattern.test(input);
-                  }
-                );
-
-                if (matchingCommand) {
-                  if (!devModeNotifiedUsers.has(event.senderID)) {
-                    api.getUserInfo(event.senderID, (err, userInfo) => {
-                      if (err) {
-                        console.error('Error getting user info:', err);
-                        return;
-                      }
-                      const userName = userInfo[event.senderID].name;
-                      api.sendMessage(
-                        `Hello ${userName},
-
-Nero is in maintenance mode for system enhancements. Only admins can run commands right now. Thanks for your understanding as we work on upgrades!
-
-HallOfCodes Team`,
-                        event.threadID,
-                        event.messageID
-                      );
-                      devModeNotifiedUsers.add(event.senderID);
-                    });
-                  }
-                  return;
-                }
-              }
-            }
-
             if (!settings.nero.devMode || isAdmin) {
               for (const eventHandler of Object.values(automateCmd)) {
                 if (!userMuteInfo) {
@@ -322,6 +283,29 @@ HallOfCodes Team`,
             }
 
             if (event.type === 'message' || event.type === 'message_reply') {
+              if (settings.nero.devMode && !isAdmin) {
+                if (!devModeNotifiedUsers.has(event.senderID)) {
+                  api.getUserInfo(event.senderID, (err, userInfo) => {
+                    if (err) {
+                      console.error('Error getting user info:', err);
+                      return;
+                    }
+                    const userName = userInfo[event.senderID].name;
+                    api.sendMessage(
+                      `Hello ${userName},
+
+Nero is in maintenance mode for system enhancements. Only admins can run commands right now. Thanks for your understanding as we work on upgrades!
+
+HallOfCodes Team`,
+                      event.threadID,
+                      event.messageID
+                    );
+                    devModeNotifiedUsers.add(event.senderID);
+                  });
+                }
+                return;
+              }
+
               try {
                 const prefix = settings.nero.prefix;
 
@@ -435,6 +419,7 @@ HallOfCodes Team`,
                   }
                 } else {
                   const isPrivateThread = event.threadID == event.senderID;
+                  
                   const isGroupChat = !isPrivateThread;
                   const containsQuestion =
                     /(\b(ai|what|how|did|where|who)\b|@el cano|@nexus|@nero)/i.test(
@@ -448,6 +433,7 @@ HallOfCodes Team`,
                         await nero(event, api);
                       } catch (error) {
                         handleError(
+                          
                           'Error executing Nero in private thread:',
                           error
                         );
