@@ -2,16 +2,6 @@ const path = require('path');
 const fs = require('fs');
 
 const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
-const restartFilePath = path.join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  'src',
-  'data',
-  'temp',
-  '@#$&.rs'
-);
 
 function getPackageInfo() {
   try {
@@ -27,9 +17,7 @@ function getPackageInfo() {
 
 function adminops(event, api) {
   const input = event.body.toLowerCase().split(' ');
-  const commandName = path
-    .basename(__filename, path.extname(__filename))
-    .toLowerCase();
+  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
   const packageInfo = getPackageInfo();
 
   if (input.includes('-help')) {
@@ -61,11 +49,7 @@ Command Usage:
     );
 
     setTimeout(() => {
-      fs.writeFile(restartFilePath, logMessage, (err) => {
-        if (err) {
-          return;
-        }
-      });
+      process.exit(0); 
     }, 3000);
   }
 }
