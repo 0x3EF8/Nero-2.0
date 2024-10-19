@@ -32,7 +32,7 @@ async function sendOutputInChunks(api, threadID, output) {
 async function getFirstName(event, api) {
   const senderId = event.senderID;
   const userInfo = await api.getUserInfo(senderId);
-  return userInfo[senderId]?.firstName.toLowerCase() || 'user'; 
+  return userInfo[senderId]?.firstName.toLowerCase().replace(/\s+/g, '') || 'user'; 
 }
 
 async function adminops(event, api) {
