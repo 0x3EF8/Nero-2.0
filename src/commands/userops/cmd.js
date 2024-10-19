@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os'); 
 
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
 function getPackageInfo() {
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
