@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const packagePath = path.join(__dirname, '..', '..', 'package.json');
+const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
 
 function getPackageInfo() {
   try {
@@ -55,9 +55,8 @@ Command Usage:
       const message = `
 ${packageInfo.name} ${packageInfo.version} Thread Info Extractor
 
-
-- Group ID: ${event.threadID}
 - Name: ${threadName}
+- Group ID: ${event.threadID}
 - Participants: ${participantCount}
 - Messages: ${messageCount}
 - Admins: ${adminIDs}
