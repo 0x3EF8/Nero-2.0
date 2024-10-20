@@ -43,14 +43,34 @@ Command Usage:
     const logMessage = `${packageInfo.name} ${packageInfo.version} was restarted at: ${restartTime}\n`;
 
     api.sendMessage(
-      `🔄 Restarting ${packageInfo.name} ${packageInfo.version} in 3 seconds... Please wait.`,
+      `🔄 Restarting ${packageInfo.name} ${packageInfo.version} in 5 seconds... Please wait.`,
       event.threadID,
-      event.messageID
-    );
+      (err, messageInfo) => {
+        if (err) return console.error(err);
 
-    setTimeout(() => {
-      process.exit(0); 
-    }, 3000);
+        let countdown = 5;
+        const countdownInterval = setInterval(() => {
+          countdown--;
+          if (countdown > 0) {
+            api.editMessage(
+              `🔄 Restarting ${packageInfo.name} ${packageInfo.version} in ${countdown} seconds... Please wait.`,
+              messageInfo.messageID
+            );
+          } else {
+            clearInterval(countdownInterval);
+            api.editMessage(
+              `🔄 Restarting ${packageInfo.name} ${packageInfo.version} now...`,
+              messageInfo.messageID,
+              () => {
+                setTimeout(() => {
+                  process.exit(0);
+                }, 1000);
+              }
+            );
+          }
+        }, 1000);
+      }
+    );
   }
 }
 
