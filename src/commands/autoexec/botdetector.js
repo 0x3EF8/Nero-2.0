@@ -4,6 +4,7 @@ const path = require('path');
 const exceptionListPath = path.join(
   __dirname,
   '..',
+  '..',
   'config',
   'restricted_access.json'
 );
