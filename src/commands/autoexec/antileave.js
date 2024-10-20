@@ -6,6 +6,7 @@ async function autoexec(api, event) {
     __dirname,
     '..',
     '..',
+    '..',
     'config',
     'settings.json'
   );
