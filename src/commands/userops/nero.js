@@ -18,11 +18,8 @@ function getPackageInfo() {
 }
 
 async function userops(event, api) {
-  const input = event.body.toLowerCase().split(' ');
-  const commandName = path
-    .basename(__filename, path.extname(__filename))
-    .toLowerCase();
-
+  const input = event.body.trim().split(/\s+/);
+  const commandName = path.basename(__filename, path.extname(__filename)).toLowerCase();
   const packageInfo = getPackageInfo();
 
   if (input.includes('-help')) {
@@ -43,26 +40,35 @@ Command Usage:
     return;
   }
 
-  const prompt = input.slice(1).join(' ') || 'Hello, Nero.';
+  const prompt = input.slice(1).join(' ').trim();
 
-  // console.log(`Received command: ${event.body}`);
-  //  console.log(`Sending prompt to API: ${prompt}`);
+  if (!prompt) {
+    api.sendMessage('Please provide a prompt for the AI.', event.threadID, event.messageID);
+    return;
+  }
 
   if (packageInfo) {
     try {
+      const threadInfo = await api.getThreadInfo(event.threadID);
+      const userInfo = await api.getUserInfo(event.senderID);
+      const userName = userInfo[event.senderID].name;
+      const groupName = threadInfo.isGroup ? threadInfo.threadName : "Private Chat";
+
+      const messages = [
+        {
+          role: 'assistant',
+          content: `You are ${packageInfo.name} ${packageInfo.version}, an advanced AI with in-depth expertise in a wide range of fields. Your name is ${packageInfo.name} ${packageInfo.version}. Respond professionally, providing articulate and concise answers while maintaining a humanized and formal tone. The current user is ${userName} in the ${groupName}.`,
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ];
+
       const response = await axios.post(
         'https://nexra.aryahcr.cc/api/chat/gpt',
         {
-          messages: [
-            {
-              role: 'assistant',
-              content: `You are ${packageInfo.name} ${packageInfo.version}, an advanced AI with in-depth expertise in a wide range of fields. Respond professionally, providing articulate and concise answers while maintaining a humanized and formal tone.`,
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
+          messages: messages,
           model: 'GPT-4',
           markdown: false,
         }
