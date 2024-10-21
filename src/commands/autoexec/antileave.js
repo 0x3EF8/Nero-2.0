@@ -3,12 +3,7 @@ const path = require('path');
 
 async function autoexec(api, event) {
   const settingsPath = path.join(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    'config',
-    'settings.json'
+    __dirname, '..', '..', 'config', 'settings.json'
   );
 
   try {
