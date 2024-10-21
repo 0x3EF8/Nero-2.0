@@ -5,11 +5,16 @@ const exceptionListPath = path.join(
   __dirname,
   '..',
   '..',
-  '..',
   'config',
   'restricted_access.json'
 );
-const configPath = path.join(__dirname, '..', '..', '..', 'config', 'roles.json');
+const configPath = path.join(
+  __dirname,
+  '..',
+  '..',
+  'config',
+  'roles.json'
+);
 
 async function autoexec(api, event) {
   if (typeof event.body === 'string') {
