@@ -15,7 +15,7 @@ app.use(express.json());
 
 app.use(
   statusMonitor({
-    title: 'Professional Express Status',
+    title: 'System Status',
     path: '/status',
     spans: [
       { interval: 1, retention: 60 },
