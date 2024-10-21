@@ -3,8 +3,10 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 const https = require('https');
 
-const configPath = path.join(__dirname, '..', '..', '..', 'config', 'settings.json');
-const tempDir = path.join(__dirname,   '..', '..', '..', 'data', 'temp');
+const configPath = path.join(
+  __dirname, '..', '..', 'config', 'settings.json'
+);
+const tempDir = path.join(__dirname, '..', '..', 'data', 'temp');
 const messagesJsonPath = path.join(tempDir, 'messages.json');
 
 let config;
