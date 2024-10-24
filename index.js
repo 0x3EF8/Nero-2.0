@@ -23,10 +23,10 @@ const {
   displayUserInformation,
 } = require('./src/auth/core');
 const { loadModules } = require('./src/utils/loader');
-const { displayAsciiInfo } = require('./src/utils/ascii_info');
+const { displayAsciiInfo } = require('./src/utils/asciiInfo');
 const { handleMute, checkAndApplyMute } = require('./src/utils/muteLogic');
 const { handleError } = require('./src/utils/errorHandler');
-const configManager = require('./src/utils/configManager');
+const { configManager } = require('./src/utils/configManager');
 const nero = require('./src/commands/userops/nero');
 require('./server');
 
