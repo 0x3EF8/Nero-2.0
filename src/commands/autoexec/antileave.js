@@ -10,7 +10,7 @@ async function autoexec(api, event) {
     const settingsData = await fs.readFile(settingsPath, 'utf8');
     const settings = JSON.parse(settingsData);
 
-    if (settings && settings.nero && settings.nero.autoexec === true) {
+    if (settings && settings.nero && settings.nero.antiLeave === true) {
       if (event.logMessageType === 'log:unsubscribe') {
         const userId = event.logMessageData.leftParticipantFbId;
 
