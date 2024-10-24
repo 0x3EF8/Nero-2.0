@@ -9,52 +9,25 @@ async function autoexec(api, event) {
     const settingsData = await fs.readFile(settingsPath, 'utf8');
     const settings = JSON.parse(settingsData);
 
-    if (event && event.body && typeof event.body === 'string') {
-      if (settings && settings[0] && settings[0].autoexec === true) {
-        const keywordReactions = {
-          happy: '😊',
-          sad: '😔',
-          angry: '😠',
-          surprised: '😲',
-          excited: '😃',
-          bored: '😒',
-          love: '❤️',
-          hate: '🤬',
-          tired: '😴',
-          laughing: '😂',
-          confused: '😕',
-          wink: '😉',
-          thinking: '🤔',
-          crying: '😭',
-          smiling: '😊',
-          nervous: '😰',
-          relaxed: '😌',
-          skeptical: '🤨',
-          calm: '😌',
-          haha: '🤣',
-        };
-
-        for (const keyword of Object.keys(keywordReactions)) {
-          if (event.body.includes(keyword)) {
-            const reaction = keywordReactions[keyword];
-            api.setMessageReaction(
-              reaction,
-              event.messageID,
-              (err) => {
-                /* if (err) {
-                console.error("Error applying reaction:", err);
+    if (settings && settings.nero && settings.nero.autoReact === true) {
+      if (event.type === 'message_reaction') {        
+        if (event.senderID !== api.getCurrentUserID()) {
+          try {
+            await api.setMessageReaction(event.reaction, event.messageID, (err) => {
+              if (err) {
+               // console.error(`Error mirroring reaction '${event.reaction}':`, err);
               } else {
-                console.log(`Reaction '${reaction}' applied to message.`);
-              }*/
-              },
-              true
-            );
+               // console.log(`Mirrored reaction '${event.reaction}' on message ${event.messageID}`);
+              }
+            }, true);
+          } catch (error) {
+          //  console.error(`Error setting mirrored reaction:`, error);
           }
         }
       }
     }
   } catch (error) {
-    console.error('Error reading settings.json:', error);
+    // console.error('Error reading or parsing settings.json:', error);
   }
 }
 
