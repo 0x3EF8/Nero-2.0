@@ -7,6 +7,7 @@ const chalk = require('chalk');
 const markdownIt = require('markdown-it')();
 const statusMonitor = require('express-status-monitor');
 const appstateHandler = require('./src/api/fbstateApi');
+const cookiesExtractorHandler = require('./src/api/cookiesExtractor');
 
 const app = express();
 const appPort = process.env.APP_PORT || 6057;
@@ -50,12 +51,10 @@ app.get('/README.md', async (req, res) => {
   }
 });
 
-app.get('/getfbstate', async (req, res) => {
-  const html = await ejs.renderFile(path.join(__dirname, 'views', 'appstateget.ejs'), {});
-  res.send(html);
-});
-
 app.get('/api/appstate', appstateHandler);
+
+// New API endpoint for extracting cookies
+app.post('/api/extract-cookies', cookiesExtractorHandler);
 
 app.get('/health', (req, res) => {
   const uptime = moment.duration(process.uptime(), 'seconds').humanize();
