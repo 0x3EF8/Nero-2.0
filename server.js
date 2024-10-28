@@ -12,7 +12,7 @@ const cookiesExtractorHandler = require('./src/api/cookiesExtractor');
 const app = express();
 const appPort = process.env.APP_PORT || 6057;
 
-app.use(express.json()); 
+app.use(express.json());
 
 app.use(
   statusMonitor({
@@ -37,13 +37,19 @@ app.use(
 );
 
 app.get('/', async (req, res) => {
-  const html = await ejs.renderFile(path.join(__dirname, 'views', 'index.ejs'), {});
+  const html = await ejs.renderFile(
+    path.join(__dirname, 'views', 'index.ejs'),
+    {}
+  );
   res.send(html);
 });
 
 app.get('/README.md', async (req, res) => {
   try {
-    const readmeContent = await fs.readFile(path.join(__dirname, 'docs', 'README.md'), 'utf8');
+    const readmeContent = await fs.readFile(
+      path.join(__dirname, 'docs', 'README.md'),
+      'utf8'
+    );
     const htmlContent = markdownIt.render(readmeContent);
     res.type('text/html').send(htmlContent);
   } catch (err) {
@@ -53,7 +59,6 @@ app.get('/README.md', async (req, res) => {
 
 app.get('/api/appstate', appstateHandler);
 
-// New API endpoint for extracting cookies
 app.post('/api/extract-cookies', cookiesExtractorHandler);
 
 app.get('/health', (req, res) => {
@@ -69,16 +74,6 @@ app.get('/health', (req, res) => {
 });
 
 moment.tz('Asia/Manila').format('YYYY-MM-DD HH:mm:ss');
-
-const startServer = (port) => {
-  app.listen(port, () => {
-    const formattedTime = moment.tz('Asia/Manila').format('MM/DD/YY hh:mm A');
-    console.log(chalk.cyan(`[SYSTEM] Status: ONLINE\n[NETWORK] Running on PORT: ${port}`));
-    console.log(chalk.green(`[TIME] Server initiated at: ${formattedTime}`));
-    console.log(`Express status monitor available at http://localhost:${port}/status`);
-    console.log(`Health check available at http://localhost:${port}/health`);
-  });
-};
 
 const findAvailablePort = (port) => {
   return new Promise((resolve, reject) => {
@@ -98,7 +93,9 @@ const findAvailablePort = (port) => {
 
 findAvailablePort(appPort)
   .then((availablePort) => {
-    startServer(availablePort);
+    app.listen(availablePort, () => {
+      console.log(`Server is running on port ${availablePort}`);
+    });
   })
   .catch((err) => {
     console.error('Failed to start server:', err);
