@@ -40,7 +40,6 @@ class ConfigManager {
   }
 
   watchJsonFile(filePath, configKey) {
-    console.log(chalk.yellow(`Watching file: ${filePath}`));
     fs.watchFile(filePath, { interval: 1000 }, (curr, prev) => {
       if (curr.mtime !== prev.mtime) {
         console.log(chalk.green(`File changed: ${filePath}`));
