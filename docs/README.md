@@ -3,9 +3,13 @@
 
 | [Home](#nero-20---your-intelligent-companion-for-any-inquiry) | [Features](#features) | [Getting Started](#getting-started) | [Usage](#usage) | [License](LICENSE) | [Changelog](../CHANGELOG.md) | [API](API.md) | [Contribute](CONTRIBUTING.md) |
 
-<img src="Nero 2.0.png" alt="Nero 2.0" style="float:left; width:150px; margin-right:10px;">
+<div style="display: flex; align-items: flex-start;">
+  <img src="Nero 2.0.png" alt="Nero 2.0" width="150" style="margin-right: 10px;">
+  <div>
+    **Nero** 2.0 is a Facebook Messenger bot that helps answer a variety of questions using AI APIs for information. At its core, it operates on the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library, jegxftydhghdhu bla bla bla I’m just too lazy to put in the detailed information here. If you want to know more, you’ll just have to dig into the documentation yourself.
+  </div>
+</div>
 
-**Nero** 2.0 is a Facebook Messenger bot that helps answer a variety of questions using AI APIs for information. At its core, it operates on the [fca-unofficial](https://github.com/VangBanLaNhat/fca-unofficial) library, jegxftydhghdhu bla bla bla I’m just too lazy to put in the detailed information here. If you want to know more, you’ll just have to dig into the documentation yourself.
 
 ## Features
 
